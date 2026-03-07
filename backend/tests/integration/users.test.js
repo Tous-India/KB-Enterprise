@@ -45,8 +45,8 @@ describe('Users API Integration Tests', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('success');
-      expect(Array.isArray(res.body.data)).toBe(true);
-      expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+      expect(Array.isArray(res.body.data.users)).toBe(true);
+      expect(res.body.data.users.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should filter users by role', async () => {
@@ -55,7 +55,7 @@ describe('Users API Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.every(u => u.role === 'BUYER')).toBe(true);
+      expect(res.body.data.users.every(u => u.role === 'BUYER')).toBe(true);
     });
 
     it('should filter users by is_active', async () => {
@@ -68,7 +68,7 @@ describe('Users API Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.every(u => u.is_active === true)).toBe(true);
+      expect(res.body.data.users.every(u => u.is_active === true)).toBe(true);
     });
 
     it('should search users by name or email', async () => {
@@ -77,19 +77,18 @@ describe('Users API Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.length).toBeGreaterThanOrEqual(1);
-      expect(res.body.data[0].email).toBe(validBuyer.email);
+      expect(res.body.data.users.length).toBeGreaterThanOrEqual(1);
+      expect(res.body.data.users[0].email).toBe(validBuyer.email);
     });
 
-    it('should paginate results', async () => {
+    it('should return all users (no pagination for bounded entities)', async () => {
       const res = await request(app)
-        .get('/api/users?page=1&limit=1')
+        .get('/api/users')
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.length).toBe(1);
-      expect(res.body.pagination).toBeDefined();
-      expect(res.body.pagination.total).toBeGreaterThanOrEqual(2);
+      // Users endpoint doesn't paginate - max ~150 users
+      expect(res.body.data.users.length).toBeGreaterThanOrEqual(2);
     });
 
     it('should reject request without auth token', async () => {
@@ -114,7 +113,7 @@ describe('Users API Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.every(u => u.role === 'BUYER')).toBe(true);
+      expect(res.body.data.buyers.every(u => u.role === 'BUYER')).toBe(true);
     });
 
     it('should search buyers', async () => {
@@ -123,7 +122,7 @@ describe('Users API Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(res.body.data.buyers.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -472,7 +471,7 @@ describe('Users API Integration Tests', () => {
           .set('Authorization', `Bearer ${adminToken}`);
 
         expect(res.status).toBe(200);
-        expect(res.body.data.some(u => u.email === 'pending@test.com')).toBe(true);
+        expect(res.body.data.users.some(u => u.email === 'pending@test.com')).toBe(true);
       });
     });
 

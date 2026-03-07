@@ -74,10 +74,10 @@ describe('Dashboard API Integration Tests', () => {
     });
   });
 
-  describe('GET /api/dashboard', () => {
+  describe('GET /api/dashboard/summary', () => {
     it('should fetch admin dashboard summary', async () => {
       const res = await request(app)
-        .get('/api/dashboard')
+        .get('/api/dashboard/summary')
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
@@ -86,42 +86,9 @@ describe('Dashboard API Integration Tests', () => {
     });
 
     it('should reject unauthenticated requests', async () => {
-      const res = await request(app).get('/api/dashboard');
+      const res = await request(app).get('/api/dashboard/summary');
 
       expect(res.status).toBe(401);
-    });
-  });
-
-  describe('GET /api/dashboard/buyer', () => {
-    it('should fetch buyer dashboard stats', async () => {
-      const res = await request(app)
-        .get('/api/dashboard/buyer')
-        .set('Authorization', `Bearer ${buyerToken}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.status).toBe('success');
-    });
-  });
-
-  describe('GET /api/dashboard/buyer/recent-orders', () => {
-    it('should fetch buyer recent orders', async () => {
-      const res = await request(app)
-        .get('/api/dashboard/buyer/recent-orders')
-        .set('Authorization', `Bearer ${buyerToken}`);
-
-      expect(res.status).toBe(200);
-      expect(Array.isArray(res.body.data)).toBe(true);
-    });
-  });
-
-  describe('GET /api/dashboard/summary', () => {
-    it('should fetch admin summary (admin)', async () => {
-      const res = await request(app)
-        .get('/api/dashboard/summary')
-        .set('Authorization', `Bearer ${adminToken}`);
-
-      expect(res.status).toBe(200);
-      expect(res.body.data).toBeDefined();
     });
 
     it('should reject buyer requests', async () => {
@@ -130,6 +97,29 @@ describe('Dashboard API Integration Tests', () => {
         .set('Authorization', `Bearer ${buyerToken}`);
 
       expect(res.status).toBe(403);
+    });
+  });
+
+  describe('GET /api/dashboard/buyer-stats', () => {
+    it('should fetch buyer dashboard stats', async () => {
+      const res = await request(app)
+        .get('/api/dashboard/buyer-stats')
+        .set('Authorization', `Bearer ${buyerToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe('success');
+    });
+  });
+
+  describe('GET /api/dashboard/buyer-recent-orders', () => {
+    it('should fetch buyer recent orders', async () => {
+      const res = await request(app)
+        .get('/api/dashboard/buyer-recent-orders')
+        .set('Authorization', `Bearer ${buyerToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.orders).toBeDefined();
+      expect(Array.isArray(res.body.data.orders)).toBe(true);
     });
   });
 });

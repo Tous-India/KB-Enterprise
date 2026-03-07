@@ -24,19 +24,18 @@ describe('usersService', () => {
         { _id: '2', user_id: 'ADM-00001', name: 'Admin 1', role: 'SUPER_ADMIN' },
       ];
       apiClient.get.mockResolvedValue({
-        data: { data: mockUsers, pagination: { total: 2 } },
+        data: { data: mockUsers },
       });
 
       const result = await usersService.getAll();
 
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockUsers);
-      expect(result.pagination.total).toBe(2);
     });
 
     it('should pass params to API', async () => {
       apiClient.get.mockResolvedValue({
-        data: { data: [], pagination: {} },
+        data: { data: [] },
       });
 
       await usersService.getAll({ role: 'BUYER', page: 1 });
@@ -56,7 +55,7 @@ describe('usersService', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Failed to fetch users');
-      expect(result.data).toEqual([]);
+      expect(result.data).toEqual({ users: [] });
     });
   });
 
