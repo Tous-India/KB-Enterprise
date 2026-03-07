@@ -112,58 +112,58 @@ jobs:
             docker-compose down || true
 
             # Update docker-compose.yml to use pulled images with SSL support
-            cat > docker-compose.yml << 'EOF'
-            version: '3.8'
+            cat > docker-compose.yml << 'COMPOSE'
+version: '3.8'
 
-            services:
-              backend:
-                image: kbenterprises/servercrm:latest
-                container_name: kb-backend
-                working_dir: /app
-                command: sh -c "npm install && npm run dev"
-                expose:
-                  - "5000"
-                env_file:
-                  - ./backend/.env
-                networks:
-                  - kb-network
-                restart: unless-stopped
+services:
+  backend:
+    image: kbenterprises/servercrm:latest
+    container_name: kb-backend
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    expose:
+      - "5000"
+    env_file:
+      - ./backend/.env
+    networks:
+      - kb-network
+    restart: unless-stopped
 
-              frontend:
-                image: kbenterprises/clientcrm:latest
-                container_name: kb-frontend
-                working_dir: /app
-                command: sh -c "npm install && npm run dev -- --host"
-                expose:
-                  - "5173"
-                environment:
-                  - VITE_API_BASE_URL=https://crm.kbenterprise.org/api
-                depends_on:
-                  - backend
-                networks:
-                  - kb-network
-                restart: unless-stopped
+  frontend:
+    image: kbenterprises/clientcrm:latest
+    container_name: kb-frontend
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    expose:
+      - "5173"
+    environment:
+      - VITE_API_BASE_URL=https://crm.kbenterprise.org/api
+    depends_on:
+      - backend
+    networks:
+      - kb-network
+    restart: unless-stopped
 
-              nginx:
-                image: nginx:alpine
-                container_name: kb-nginx
-                ports:
-                  - "80:80"
-                  - "443:443"
-                volumes:
-                  - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-                  - /etc/letsencrypt:/etc/letsencrypt
-                depends_on:
-                  - backend
-                  - frontend
-                networks:
-                  - kb-network
-                restart: unless-stopped
+  nginx:
+    image: nginx:alpine
+    container_name: kb-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - kb-network
+    restart: unless-stopped
 
-            networks:
-              kb-network:
-                driver: bridge
-            EOF
+networks:
+  kb-network:
+    driver: bridge
+COMPOSE
 
             # Start new containers
             echo "Starting new containers..."
