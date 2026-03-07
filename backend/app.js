@@ -28,7 +28,7 @@ app.use(
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
-  })
+  }),
 );
 
 // ===========================
@@ -74,3 +74,7 @@ app.use((req, res, next) => {
 app.use(errorMiddleware);
 
 export default app;
+
+// "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+// "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watch",
+// "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
