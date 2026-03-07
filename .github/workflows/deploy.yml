@@ -99,7 +99,8 @@ jobs:
             echo "=========================================="
 
             # Navigate to app directory
-            cd ~/kb-crm
+            # cd ~/kb-crm
+            cd /home/kb-crm
 
             # Pull latest images from Docker Hub
             echo "Pulling latest images..."
