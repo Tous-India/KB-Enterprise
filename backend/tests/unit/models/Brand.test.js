@@ -118,6 +118,9 @@ describe('Brand Model', () => {
 
   describe('Unique Constraints', () => {
     it('should not allow duplicate brand names', async () => {
+      // Ensure indexes are created before testing unique constraint
+      await Brand.createIndexes();
+
       const brand1 = new Brand({
         name: 'UniqueBrand'
       });
