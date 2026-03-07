@@ -1,0 +1,110 @@
+# ============================================
+# KB CRM - CI Pipeline
+# Runs tests and linting on PRs and pushes
+# ============================================
+
+name: CI - Test & Lint
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  # ========================================
+  # Backend Tests
+  # ========================================
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: ./backend
+        run: npm test
+        env:
+          NODE_ENV: test
+
+  # ========================================
+  # Frontend Tests & Lint
+  # ========================================
+  frontend-test:
+    name: Frontend Tests & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend2/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend2
+        run: npm ci
+
+      - name: Run linter
+        working-directory: ./frontend2
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: ./frontend2
+        run: npm run test:run
+
+  # ========================================
+  # Docker Build Test
+  # ========================================
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image (servercrm)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          tags: kbenterprises/servercrm:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image (clientcrm)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend2
+          push: false
+          tags: kbenterprises/clientcrm:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
