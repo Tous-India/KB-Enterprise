@@ -160,9 +160,12 @@ describe('Categories API Integration Tests', () => {
 
   describe('PUT /api/categories/:id/subcategories/:subId', () => {
     it('should update sub-category (admin)', async () => {
-      const subId = testCategory.sub_categories[0].sub_category_id;
+      // Refetch category to ensure we have the latest data
+      const freshCategory = await Category.findById(testCategory._id);
+      const subId = freshCategory.sub_categories[0].sub_category_id;
+
       const res = await request(app)
-        .put(`/api/categories/${testCategory._id}/subcategories/${subId}`)
+        .put(`/api/categories/${freshCategory._id}/subcategories/${subId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           name: 'Desktop Computers',
@@ -174,9 +177,12 @@ describe('Categories API Integration Tests', () => {
 
   describe('DELETE /api/categories/:id/subcategories/:subId', () => {
     it('should delete sub-category (admin)', async () => {
-      const subId = testCategory.sub_categories[0].sub_category_id;
+      // Refetch category to ensure we have the latest data
+      const freshCategory = await Category.findById(testCategory._id);
+      const subId = freshCategory.sub_categories[0].sub_category_id;
+
       const res = await request(app)
-        .delete(`/api/categories/${testCategory._id}/subcategories/${subId}`)
+        .delete(`/api/categories/${freshCategory._id}/subcategories/${subId}`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
