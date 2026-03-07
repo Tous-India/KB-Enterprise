@@ -162,14 +162,28 @@ describe('Categories API Integration Tests', () => {
     it('should update sub-category (admin)', async () => {
       // Refetch category to ensure we have the latest data
       const freshCategory = await Category.findById(testCategory._id);
+
+      if (!freshCategory) {
+        console.log('[DEBUG PUT subcategory] freshCategory is null');
+        console.log('[DEBUG PUT subcategory] testCategory._id:', testCategory._id.toString());
+      }
+
       const subId = freshCategory.sub_categories[0].sub_category_id;
+      const categoryId = freshCategory._id.toString();
 
       const res = await request(app)
-        .put(`/api/categories/${freshCategory._id}/subcategories/${subId}`)
+        .put(`/api/categories/${categoryId}/subcategories/${subId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           name: 'Desktop Computers',
         });
+
+      if (res.status !== 200) {
+        console.log('[DEBUG PUT subcategory] Response status:', res.status);
+        console.log('[DEBUG PUT subcategory] Response body:', JSON.stringify(res.body));
+        console.log('[DEBUG PUT subcategory] categoryId:', categoryId);
+        console.log('[DEBUG PUT subcategory] subId:', subId);
+      }
 
       expect(res.status).toBe(200);
     });
@@ -179,11 +193,25 @@ describe('Categories API Integration Tests', () => {
     it('should delete sub-category (admin)', async () => {
       // Refetch category to ensure we have the latest data
       const freshCategory = await Category.findById(testCategory._id);
+
+      if (!freshCategory) {
+        console.log('[DEBUG DELETE subcategory] freshCategory is null');
+        console.log('[DEBUG DELETE subcategory] testCategory._id:', testCategory._id.toString());
+      }
+
       const subId = freshCategory.sub_categories[0].sub_category_id;
+      const categoryId = freshCategory._id.toString();
 
       const res = await request(app)
-        .delete(`/api/categories/${freshCategory._id}/subcategories/${subId}`)
+        .delete(`/api/categories/${categoryId}/subcategories/${subId}`)
         .set('Authorization', `Bearer ${adminToken}`);
+
+      if (res.status !== 200) {
+        console.log('[DEBUG DELETE subcategory] Response status:', res.status);
+        console.log('[DEBUG DELETE subcategory] Response body:', JSON.stringify(res.body));
+        console.log('[DEBUG DELETE subcategory] categoryId:', categoryId);
+        console.log('[DEBUG DELETE subcategory] subId:', subId);
+      }
 
       expect(res.status).toBe(200);
     });

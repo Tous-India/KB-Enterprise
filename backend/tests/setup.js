@@ -15,9 +15,19 @@ let mongoServer;
 
 // Connect to in-memory MongoDB before all tests
 beforeAll(async () => {
+  // Close any existing connection first
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
+
+  // Connect to in-memory MongoDB
   await mongoose.connect(mongoUri);
+
+  // Ensure connection is ready
+  await mongoose.connection.asPromise();
 });
 
 // Disconnect and stop MongoDB after all tests

@@ -181,9 +181,27 @@ describe('Quotations API Integration Tests', () => {
 
   describe('GET /api/quotations/:id', () => {
     it('should fetch quotation by ID (admin)', async () => {
+      // Debug: Verify data exists before making request
+      const quotationId = testQuotation._id.toString();
+      const existsInDb = await Quotation.findById(quotationId);
+
+      // Log diagnostic info for CI debugging
+      if (!existsInDb) {
+        console.log('[DEBUG] Quotation NOT found in DB before API call');
+        console.log('[DEBUG] testQuotation._id:', quotationId);
+        console.log('[DEBUG] All quotations:', await Quotation.find({}).select('_id quote_number'));
+      }
+
       const res = await request(app)
-        .get(`/api/quotations/${testQuotation._id}`)
+        .get(`/api/quotations/${quotationId}`)
         .set('Authorization', `Bearer ${adminToken}`);
+
+      // More debug info on failure
+      if (res.status !== 200) {
+        console.log('[DEBUG] Response status:', res.status);
+        console.log('[DEBUG] Response body:', JSON.stringify(res.body));
+        console.log('[DEBUG] Request URL:', `/api/quotations/${quotationId}`);
+      }
 
       expect(res.status).toBe(200);
       expect(res.body.data.quotation.quote_number).toBe(testQuotation.quote_number);
@@ -201,9 +219,16 @@ describe('Quotations API Integration Tests', () => {
 
   describe('GET /api/quotations/:id (buyer view)', () => {
     it('should fetch own quotation (buyer)', async () => {
+      const quotationId = testQuotation._id.toString();
+
       const res = await request(app)
-        .get(`/api/quotations/${testQuotation._id}`)
+        .get(`/api/quotations/${quotationId}`)
         .set('Authorization', `Bearer ${buyerToken}`);
+
+      if (res.status !== 200) {
+        console.log('[DEBUG buyer view] Response status:', res.status);
+        console.log('[DEBUG buyer view] Response body:', JSON.stringify(res.body));
+      }
 
       expect(res.status).toBe(200);
       expect(res.body.data.quotation.quote_number).toBe(testQuotation.quote_number);
