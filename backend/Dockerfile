@@ -1,21 +1,25 @@
 # ============================================
-# KB CRM Backend - Development Image
-# Contains full source code
-# Usage: npm install runs on container start
+# KB CRM Backend - Docker Image
+# Node.js Express API
 # ============================================
 
 FROM node:20-alpine
 
-# Install git (needed for some npm packages)
-RUN apk add --no-cache git
-
+# Set working directory
 WORKDIR /app
 
-# Copy all source code
+# Copy package files first (better layer caching)
+COPY package*.json ./
+
+# Copy source code
 COPY . .
 
-# Expose port
+# Expose API port
 EXPOSE 5000
 
-# Default: install deps and run dev server
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/api/health || exit 1
+
+# Install dependencies and start dev server
 CMD ["sh", "-c", "npm install && npm run dev"]

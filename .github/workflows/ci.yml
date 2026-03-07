@@ -1,6 +1,6 @@
 # ============================================
 # KB CRM - CI Pipeline
-# Runs tests and linting on PRs and pushes
+# Runs tests, linting, and validates Docker builds
 # ============================================
 
 name: CI - Test & Lint
@@ -10,6 +10,11 @@ on:
     branches: [main, develop]
   push:
     branches: [main, develop]
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # ========================================
@@ -77,7 +82,7 @@ jobs:
         run: npm run test:run
 
   # ========================================
-  # Docker Build Test
+  # Docker Build Validation
   # ========================================
   docker-build:
     name: Docker Build Test
@@ -93,7 +98,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build backend image (servercrm)
+      - name: Build backend image
         uses: docker/build-push-action@v5
         with:
           context: ./backend
@@ -102,7 +107,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build frontend image (clientcrm)
+      - name: Build frontend image
         uses: docker/build-push-action@v5
         with:
           context: ./frontend2
