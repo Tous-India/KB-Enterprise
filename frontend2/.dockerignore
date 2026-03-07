@@ -1,0 +1,124 @@
+# ============================================
+# KB CRM Frontend - Docker Ignore
+# Exclude files not needed in image
+# ============================================
+
+# Dependencies (will be installed on server)
+node_modules
+
+# Build output
+dist/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Git
+.git
+.gitignore
+build/
+out/
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+*.md
+
+# Tests
+src/__tests__/
+__tests__/
+coverage/
+.nyc_output/
+vitest.config.js
+vitest.config.ts
+jest.config.js
+src/setupTests.js
+src/setupTests.ts
+*.test.js
+*.test.jsx
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.jsx
+*.spec.ts
+*.spec.tsx
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-*
+*.code-workspace
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Docker (prevent recursive copy)
+Dockerfile
+Dockerfile.*
+.dockerignore
+
+# Linting/Formatting configs (not needed at runtime)
+.eslintrc*
+.prettierrc*
+eslint.config.js
+eslint.config.mjs
+prettier.config.js
+.editorconfig
+.stylelintrc*
+
+# TypeScript configs (build uses them, but not in final image)
+tsconfig.json
+tsconfig.*.json
+*.tsbuildinfo
+
+# Storybook (if applicable)
+.storybook/
+storybook-static/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.bak
+*.cache
+
+# Public folder assets that are copied separately
+# public/mockServiceWorker.js
+
+# Optional npm cache
+.npm/
+
+# Claude/AI
+.claude/
+
+# Cypress/Playwright (E2E testing)
+cypress/
+playwright/
+e2e/
+
+# Archives (backups, exports)
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.bz2
