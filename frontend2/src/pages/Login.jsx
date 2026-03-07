@@ -88,7 +88,7 @@ const Login = () => {
         setError(result.message);
         setIsLoading(false);
       }
-    } catch (error) {
+    } catch {
       setError("Login failed. Please try again.");
       setIsLoading(false);
     }

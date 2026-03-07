@@ -246,9 +246,8 @@ describe('useCartStore', () => {
     });
 
     it('should only remove specified item by id', () => {
-      // Add item and get its id
+      // Add item
       useCartStore.getState().addItem(mockProduct, 5);
-      const firstItem = useCartStore.getState().items[0];
 
       // Try to remove with a non-existing id - should not remove anything
       useCartStore.getState().removeItem(99999);

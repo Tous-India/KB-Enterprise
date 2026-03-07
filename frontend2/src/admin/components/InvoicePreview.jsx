@@ -41,8 +41,6 @@ const InvoicePreview = ({
   const tds = hasTax ? (order.tds || order.tax || (subtotal * taxRate / 100)) : 0
 
   const total = subtotal - discount + (hasTax ? tds : 0)
-  const paymentMade = order.payment_received || order.amount_paid || 0
-  const balanceDue = total - paymentMade
 
   // Invoice type configuration
   const invoiceTypeConfig = {

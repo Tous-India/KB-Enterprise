@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import useNotificationStore from '../../stores/useNotificationStore';
 
 // Mock notification data
@@ -283,7 +283,7 @@ describe('useNotificationStore', () => {
       const id1 = useNotificationStore.getState().addNotification(mockNotification1);
 
       vi.setSystemTime(new Date('2024-01-15T11:00:00Z'));
-      const id2 = useNotificationStore.getState().addNotification(mockNotification2);
+      useNotificationStore.getState().addNotification(mockNotification2);
 
       expect(useNotificationStore.getState().notifications).toHaveLength(2);
       expect(useNotificationStore.getState().getUnreadCount()).toBe(2);

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useEffect } from 'react';
 import useCurrencyStore from '../store/useCurrencyStore';
 

@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import Logo from '../../components/Logo';
 
-const InvoicePrintPreview = forwardRef(({ invoice, companyDetails, bankDetails, globalRate = 83.5 }, ref) => {
+const InvoicePrintPreview = forwardRef(({ invoice, companyDetails, globalRate = 83.5 }, ref) => {
   const exchangeRate = invoice?.exchange_rate || globalRate;
 
   const company = companyDetails || {

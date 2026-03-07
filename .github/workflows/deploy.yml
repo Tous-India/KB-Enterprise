@@ -89,6 +89,8 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT }}
+          passphrase: ""
+          script_stop: true
           script: |
             set -e
 

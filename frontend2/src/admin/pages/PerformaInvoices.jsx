@@ -5256,7 +5256,7 @@ function PerformaInvoices() {
         document={emailPI}
         buyerCurrentEmail={buyerCurrentEmail}
         onSuccess={() => {
-          fetchPerformaInvoices()
+          fetchProformaInvoices()
           toast.success('Proforma Invoice email sent successfully!')
         }}
       />

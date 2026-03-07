@@ -125,11 +125,18 @@ const SendEmailModal = ({
   // Reset state when modal opens with new document
   useEffect(() => {
     if (open && document) {
-      setRecipientEmail(getDefaultEmail());
+      // Get default email - prioritize current buyer email if provided
+      const defaultEmail = buyerCurrentEmail ||
+        document.customer_email ||
+        document.buyer_email ||
+        document.buyer?.email ||
+        document.bill_to?.email ||
+        "";
+      setRecipientEmail(defaultEmail);
       setCustomMessage("");
       setSuccess(false);
     }
-  }, [open, document]);
+  }, [open, document, buyerCurrentEmail]);
 
   // Send email mutation
   const sendEmailMutation = useMutation({
