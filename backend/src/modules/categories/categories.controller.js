@@ -51,7 +51,7 @@ export const getById = catchAsync(async (req, res) => {
 // Admin only — create a new category
 // Send as form-data with optional "image" file field
 export const create = catchAsync(async (req, res) => {
-  const { name, description, display_order } = req.body;
+  const { name, description, display_order } = req.body || {};
 
   if (!name) {
     throw new AppError("Category name is required", 400);
@@ -77,7 +77,7 @@ export const create = catchAsync(async (req, res) => {
 // Send as form-data with optional "image" file field
 export const update = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { name, description, display_order, is_active } = req.body;
+  const { name, description, display_order, is_active } = req.body || {};
 
   const category = await Category.findById(id);
 
@@ -131,7 +131,7 @@ export const remove = catchAsync(async (req, res) => {
 // Admin only — add a subcategory
 export const addSubCategory = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { name, description } = req.body;
+  const { name, description } = req.body || {};
 
   if (!name) {
     throw new AppError("Sub-category name is required", 400);
@@ -164,7 +164,7 @@ export const addSubCategory = catchAsync(async (req, res) => {
 // Admin only — update a subcategory
 export const updateSubCategory = catchAsync(async (req, res) => {
   const { id, subId } = req.params;
-  const { name, description } = req.body;
+  const { name, description } = req.body || {};
 
   const category = await Category.findById(id);
 

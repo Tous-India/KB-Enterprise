@@ -129,7 +129,7 @@ export const getById = catchAsync(async (req, res) => {
 // Admin only — record a payment against an invoice
 // Body: { invoice, amount, currency, amount_usd, payment_method, transaction_id, notes }
 export const create = catchAsync(async (req, res) => {
-  const { invoice: invoiceId, amount, currency, amount_usd, payment_method, transaction_id, notes } = req.body;
+  const { invoice: invoiceId, amount, currency, amount_usd, payment_method, transaction_id, notes } = req.body || {};
 
   if (!invoiceId) {
     throw new AppError("Invoice ID is required", 400);
@@ -182,7 +182,7 @@ export const create = catchAsync(async (req, res) => {
 // Admin only — update payment details
 export const update = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { payment_method, transaction_id, notes } = req.body;
+  const { payment_method, transaction_id, notes } = req.body || {};
 
   const payment = await Payment.findById(id);
 
@@ -205,7 +205,7 @@ export const update = catchAsync(async (req, res) => {
 // Admin only — update payment status (e.g. mark as refunded)
 export const updateStatus = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status } = req.body || {};
 
   if (!status) {
     throw new AppError("Status is required", 400);

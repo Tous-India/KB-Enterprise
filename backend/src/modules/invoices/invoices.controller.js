@@ -132,7 +132,7 @@ export const getById = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — create invoice from order
 export const create = catchAsync(async (req, res) => {
-  const { order: orderId, due_date, billing_address, notes } = req.body;
+  const { order: orderId, due_date, billing_address, notes } = req.body || {};
 
   if (!orderId) {
     throw new AppError("Order ID is required", 400);
@@ -250,7 +250,7 @@ export const createManual = catchAsync(async (req, res) => {
     // Legacy addresses (backward compatibility)
     billing_address,
     shipping_address,
-  } = req.body;
+  } = req.body || {};
 
   if (!buyer) {
     throw new AppError("Buyer ID is required", 400);
@@ -412,7 +412,7 @@ export const createManual = catchAsync(async (req, res) => {
 // Admin only — comprehensive update for all invoice fields
 export const update = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const updateData = req.body;
+  const updateData = req.body || {};
 
   const invoice = await Invoice.findById(id);
 
@@ -542,7 +542,7 @@ export const update = catchAsync(async (req, res) => {
 // Admin only — update invoice status
 export const updateStatus = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { status, delivery_status } = req.body;
+  const { status, delivery_status } = req.body || {};
 
   const invoice = await Invoice.findById(id);
 
@@ -570,7 +570,7 @@ export const updateStatus = catchAsync(async (req, res) => {
 // Admin only — update invoice items with delivery tracking
 export const updateItems = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { items } = req.body;
+  const { items } = req.body || {};
 
   const invoice = await Invoice.findById(id);
 
@@ -688,7 +688,7 @@ export const createFromPI = catchAsync(async (req, res) => {
     notes,
     company_details,
     terms_and_conditions,
-  } = req.body;
+  } = req.body || {};
 
   if (!proforma_invoice_id) {
     throw new AppError("Proforma Invoice ID is required", 400);
@@ -885,7 +885,7 @@ export const duplicate = catchAsync(async (req, res) => {
 // Admin only — send invoice via email to buyer
 export const sendEmail = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { recipientEmail, customMessage } = req.body;
+  const { recipientEmail, customMessage } = req.body || {};
 
   const invoice = await Invoice.findById(id)
     .populate("buyer", "name email user_id");

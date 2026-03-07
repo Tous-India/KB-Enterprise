@@ -32,7 +32,7 @@ export const getById = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — create brand (optional logo upload)
 export const create = catchAsync(async (req, res) => {
-  const { name, description, website } = req.body;
+  const { name, description, website } = req.body || {};
 
   if (!name) {
     throw new AppError("Brand name is required", 400);
@@ -56,7 +56,7 @@ export const create = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — update brand
 export const update = catchAsync(async (req, res) => {
-  const { name, description, website } = req.body;
+  const { name, description, website } = req.body || {};
 
   const brand = await Brand.findById(req.params.id);
 

@@ -501,7 +501,7 @@ export const approveUser = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — reject a buyer's registration
 export const rejectUser = catchAsync(async (req, res) => {
-  const { reason } = req.body;
+  const { reason } = req.body || {};
   const user = await User.findById(req.params.id).select("-password");
 
   if (!user) {

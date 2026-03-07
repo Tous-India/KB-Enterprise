@@ -40,7 +40,7 @@ export const getByKey = catchAsync(async (req, res) => {
 // ===========================
 // SUPER_ADMIN only — create a setting
 export const create = catchAsync(async (req, res) => {
-  const { key, value, category, description } = req.body;
+  const { key, value, category, description } = req.body || {};
 
   if (!key || value === undefined) {
     throw new AppError("Key and value are required", 400);
@@ -61,7 +61,7 @@ export const create = catchAsync(async (req, res) => {
 // ===========================
 // SUPER_ADMIN only — update a setting by key
 export const update = catchAsync(async (req, res) => {
-  const { value, description } = req.body;
+  const { value, description } = req.body || {};
 
   const setting = await Setting.findOne({ key: req.params.key });
 
@@ -83,7 +83,7 @@ export const update = catchAsync(async (req, res) => {
 // SUPER_ADMIN only — update multiple settings at once
 // Body: { settings: [{ key, value }] }
 export const bulkUpdate = catchAsync(async (req, res) => {
-  const { settings } = req.body;
+  const { settings } = req.body || {};
 
   if (!settings || !Array.isArray(settings)) {
     throw new AppError("Settings array is required", 400);

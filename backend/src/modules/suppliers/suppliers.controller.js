@@ -84,7 +84,7 @@ export const create = catchAsync(async (req, res) => {
     business_info,
     bank_details,
     products_supplied,
-  } = req.body;
+  } = req.body || {};
 
   if (!supplier_code || !supplier_name) {
     throw new AppError("Supplier code and name are required", 400);
@@ -126,7 +126,7 @@ export const update = catchAsync(async (req, res) => {
     business_info,
     bank_details,
     products_supplied,
-  } = req.body;
+  } = req.body || {};
 
   const { id } = req.params;
   const query = isValidObjectId(id)
@@ -166,7 +166,7 @@ export const update = catchAsync(async (req, res) => {
 // ===========================
 // Admin — toggle supplier status
 export const updateStatus = catchAsync(async (req, res) => {
-  const { status } = req.body;
+  const { status } = req.body || {};
 
   if (!status || !Object.values(SUPPLIER_STATUS).includes(status)) {
     throw new AppError("Valid status is required (ACTIVE or INACTIVE)", 400);
@@ -221,7 +221,7 @@ export const remove = catchAsync(async (req, res) => {
 // ===========================
 // Admin — update supplier performance metrics
 export const updatePerformance = catchAsync(async (req, res) => {
-  const { total_orders, total_value, on_time_delivery_rate, quality_rating, last_order_date } = req.body;
+  const { total_orders, total_value, on_time_delivery_rate, quality_rating, last_order_date } = req.body || {};
 
   const { id } = req.params;
   const query = isValidObjectId(id)

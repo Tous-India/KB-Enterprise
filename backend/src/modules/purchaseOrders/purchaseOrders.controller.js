@@ -111,7 +111,7 @@ export const getById = catchAsync(async (req, res) => {
 // No pricing — buyer sends product + quantity only
 // No stock validation — buyer can order out-of-stock products
 export const create = catchAsync(async (req, res) => {
-  const { title, items, shipping_address, customer_notes } = req.body;
+  const { title, items, shipping_address, customer_notes } = req.body || {};
 
   if (!title) {
     throw new AppError("Purchase order title is required", 400);
@@ -159,7 +159,7 @@ export const create = catchAsync(async (req, res) => {
 // Buyer can update their own PENDING PO (title, items, notes, address)
 export const update = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { title, items, shipping_address, customer_notes } = req.body;
+  const { title, items, shipping_address, customer_notes } = req.body || {};
 
   const purchaseOrder = await PurchaseOrder.findById(id);
 
@@ -242,7 +242,7 @@ export const cancel = catchAsync(async (req, res) => {
 // Admin only — reject a pending PO
 export const reject = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { admin_notes } = req.body;
+  const { admin_notes } = req.body || {};
 
   const purchaseOrder = await PurchaseOrder.findById(id);
 

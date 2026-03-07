@@ -135,7 +135,7 @@ export const getById = catchAsync(async (req, res) => {
 // Admin only — create order from accepted/converted quotation
 // Body: { quotation, shipping_address, notes, estimated_delivery }
 export const create = catchAsync(async (req, res) => {
-  const { quotation: quotationId, shipping_address, notes, estimated_delivery } = req.body;
+  const { quotation: quotationId, shipping_address, notes, estimated_delivery } = req.body || {};
 
   if (!quotationId) {
     throw new AppError("Quotation ID is required", 400);
@@ -193,7 +193,7 @@ export const create = catchAsync(async (req, res) => {
 // Admin only — update order fields
 export const update = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { notes, admin_notes, estimated_delivery, shipping_address } = req.body;
+  const { notes, admin_notes, estimated_delivery, shipping_address } = req.body || {};
 
   const order = await Order.findById(id);
 
@@ -217,7 +217,7 @@ export const update = catchAsync(async (req, res) => {
 // Admin only — update order status
 export const updateStatus = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { status } = req.body || {};
 
   if (!status) {
     throw new AppError("Status is required", 400);
@@ -241,7 +241,7 @@ export const updateStatus = catchAsync(async (req, res) => {
 // Admin only — dispatch an order (must have payment)
 export const dispatch = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { courier_service, tracking_number, dispatch_notes } = req.body;
+  const { courier_service, tracking_number, dispatch_notes } = req.body || {};
 
   const order = await Order.findById(id);
 
@@ -285,7 +285,7 @@ export const partialDispatch = catchAsync(async (req, res) => {
     shipping_notes,
     generate_invoice,
     invoice_number,
-  } = req.body;
+  } = req.body || {};
 
   if (!items || items.length === 0) {
     throw new AppError("At least one item is required for dispatch", 400);
@@ -408,7 +408,7 @@ export const partialDispatch = catchAsync(async (req, res) => {
 // Admin only — update dispatch tracking info
 export const updateDispatchInfo = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { courier_service, tracking_number, dispatch_notes } = req.body;
+  const { courier_service, tracking_number, dispatch_notes } = req.body || {};
 
   const order = await Order.findById(id);
 
@@ -436,7 +436,7 @@ export const updateDispatchInfo = catchAsync(async (req, res) => {
 // Body: { amount, payment_method, notes }
 export const recordPayment = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { amount, payment_method, notes } = req.body;
+  const { amount, payment_method, notes } = req.body || {};
 
   if (!amount || amount <= 0) {
     throw new AppError("Valid payment amount is required", 400);
@@ -490,7 +490,7 @@ export const submitQuoteRequest = catchAsync(async (req, res) => {
     tax,
     shipping,
     total_amount,
-  } = req.body;
+  } = req.body || {};
 
   if (!items || items.length === 0) {
     throw new AppError("At least one item is required", 400);
@@ -556,7 +556,7 @@ export const convertToQuotation = catchAsync(async (req, res) => {
     debet_note,
     bank_charges,
     admin_notes,
-  } = req.body;
+  } = req.body || {};
 
   const order = await Order.findById(id);
 
@@ -703,7 +703,7 @@ export const getPending = catchAsync(async (req, res) => {
 // Creates a new order with PENDING status (quote request) from an existing order's items
 export const cloneOrder = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { notes } = req.body;
+  const { notes } = req.body || {};
 
   // Find the original order
   const originalOrder = await Order.findById(id)

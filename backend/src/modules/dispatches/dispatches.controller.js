@@ -115,7 +115,7 @@ export const create = catchAsync(async (req, res) => {
     invoice_title,
     exchange_rate,
     notes,
-  } = req.body;
+  } = req.body || {};
 
   // Validate source
   if (!source_type || !source_id) {
@@ -648,7 +648,7 @@ export const getSummary = catchAsync(async (req, res) => {
 // Admin only — send dispatch notification via email to buyer
 export const sendEmail = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { recipientEmail, customMessage } = req.body;
+  const { recipientEmail, customMessage } = req.body || {};
 
   const dispatch = await Dispatch.findById(id)
     .populate("buyer", "name email user_id");

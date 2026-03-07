@@ -29,7 +29,7 @@ export const getMyCart = catchAsync(async (req, res) => {
 // Buyer — add a product to cart
 // Body: { product: "<product_id>", quantity: 5 }
 export const addItem = catchAsync(async (req, res) => {
-  const { product, quantity } = req.body;
+  const { product, quantity } = req.body || {};
 
   if (!product || !quantity) {
     throw new AppError("Product ID and quantity are required", 400);
@@ -86,7 +86,7 @@ export const addItem = catchAsync(async (req, res) => {
 // Body: { quantity: 10 }
 export const updateItem = catchAsync(async (req, res) => {
   const { itemId } = req.params;
-  const { quantity } = req.body;
+  const { quantity } = req.body || {};
 
   if (!quantity || quantity < 1) {
     throw new AppError("Quantity must be at least 1", 400);
@@ -169,7 +169,7 @@ export const clearCart = catchAsync(async (req, res) => {
 // Body: { title: "Q1 Restock", shipping_address: {...}, customer_notes: "..." }
 // Creates a PO from cart items, then clears the cart
 export const checkout = catchAsync(async (req, res) => {
-  const { title, shipping_address, customer_notes } = req.body;
+  const { title, shipping_address, customer_notes } = req.body || {};
 
   if (!title) {
     throw new AppError("Purchase order title is required", 400);

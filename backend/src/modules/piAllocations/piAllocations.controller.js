@@ -70,7 +70,7 @@ export const create = catchAsync(async (req, res) => {
 // POST /api/pi-allocations/bulk
 // ===========================
 export const bulkSave = catchAsync(async (req, res) => {
-  const { allocations } = req.body;
+  const { allocations } = req.body || {};
 
   if (!allocations || !Array.isArray(allocations)) {
     throw new AppError("Allocations array is required", 400);

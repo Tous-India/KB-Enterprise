@@ -118,7 +118,7 @@ export const create = catchAsync(async (req, res) => {
     payment_method,
     payment_date,
     notes,
-  } = req.body;
+  } = req.body || {};
 
   // Validate PI exists
   const pi = await ProformaInvoice.findById(proforma_invoice_id);
@@ -211,7 +211,7 @@ export const verify = catchAsync(async (req, res) => {
     payment_date,
     transaction_id,
     generate_invoice,
-  } = req.body;
+  } = req.body || {};
 
   const record = await PaymentRecord.findById(id);
   if (!record) {
@@ -288,7 +288,7 @@ export const verify = catchAsync(async (req, res) => {
 // Admin only — reject a payment record
 export const reject = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { verification_notes } = req.body;
+  const { verification_notes } = req.body || {};
 
   const record = await PaymentRecord.findById(id);
   if (!record) {
@@ -401,7 +401,7 @@ export const update = catchAsync(async (req, res) => {
     payment_method,
     payment_date,
     notes,
-  } = req.body;
+  } = req.body || {};
 
   const record = await PaymentRecord.findById(id);
   if (!record) {
@@ -467,7 +467,7 @@ export const adminUpdate = catchAsync(async (req, res) => {
     notes,
     verification_notes,
     payment_exchange_rate,
-  } = req.body;
+  } = req.body || {};
 
   const record = await PaymentRecord.findById(id);
   if (!record) {
@@ -615,7 +615,7 @@ export const adminCollect = catchAsync(async (req, res) => {
     notes,
     collection_source,
     payment_exchange_rate,
-  } = req.body;
+  } = req.body || {};
 
   // Validate PI exists
   const pi = await ProformaInvoice.findById(proforma_invoice_id);

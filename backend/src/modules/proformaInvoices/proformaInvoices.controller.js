@@ -175,7 +175,7 @@ export const create = catchAsync(async (req, res) => {
     billing_address,
     shipping_address,
     status,
-  } = req.body;
+  } = req.body || {};
 
   if (!quotation_id) {
     throw new AppError("Quotation ID is required", 400);
@@ -293,7 +293,7 @@ export const update = catchAsync(async (req, res) => {
     dispatched,
     dispatch_date,
     dispatch_details,
-  } = req.body;
+  } = req.body || {};
 
   const proforma = await ProformaInvoice.findById(id);
 
@@ -592,7 +592,7 @@ export const getCompletedPIs = catchAsync(async (req, res) => {
 // Admin only — send proforma invoice via email to buyer
 export const sendEmail = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { recipientEmail, customMessage } = req.body;
+  const { recipientEmail, customMessage } = req.body || {};
 
   const proforma = await ProformaInvoice.findById(id)
     .populate("buyer", "name email user_id")

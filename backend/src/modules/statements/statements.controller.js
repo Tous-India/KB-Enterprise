@@ -310,7 +310,7 @@ export const getTransactionsByBuyer = catchAsync(async (req, res) => {
 // Admin only — generate statement for a buyer for a period
 // Body: { buyer, period_start, period_end }
 export const generate = catchAsync(async (req, res) => {
-  const { buyer, period_start, period_end } = req.body;
+  const { buyer, period_start, period_end } = req.body || {};
 
   if (!buyer || !period_start || !period_end) {
     throw new AppError("Buyer, period_start, and period_end are required", 400);

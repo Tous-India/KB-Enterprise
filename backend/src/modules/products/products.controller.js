@@ -152,7 +152,7 @@ export const create = catchAsync(async (req, res) => {
     brand, description, list_price, your_price, discount_percentage,
     stock_status, available_locations, total_quantity,
     specifications, manufacturer,
-  } = req.body;
+  } = req.body || {};
 
   if (!part_number || !product_name) {
     throw new AppError("Part number and product name are required", 400);
@@ -297,7 +297,7 @@ export const remove = catchAsync(async (req, res) => {
 // Admin only — update stock
 export const updateInventory = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { available_locations, total_quantity, stock_status } = req.body;
+  const { available_locations, total_quantity, stock_status } = req.body || {};
 
   const product = await findProductById(id);
 

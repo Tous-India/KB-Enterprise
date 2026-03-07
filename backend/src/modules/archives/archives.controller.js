@@ -242,7 +242,7 @@ export const create = catchAsync(async (req, res) => {
     internal_notes,
     tags,
     source_system,
-  } = req.body;
+  } = req.body || {};
 
   if (!document_type) {
     throw new AppError("Document type is required", 400);
@@ -287,7 +287,7 @@ export const create = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — bulk import archives
 export const bulkImport = catchAsync(async (req, res) => {
-  const { archives } = req.body;
+  const { archives } = req.body || {};
 
   if (!archives || !Array.isArray(archives) || archives.length === 0) {
     throw new AppError("Archives array is required", 400);

@@ -114,7 +114,7 @@ export const getBySupplier = async (req, res, next) => {
 export const create = async (req, res, next) => {
   try {
     const orderData = {
-      ...req.body,
+      ...(req.body || {}),
       created_by: req.user._id,
     };
 
@@ -151,7 +151,7 @@ export const update = async (req, res, next) => {
       });
     }
 
-    Object.assign(order, req.body);
+    Object.assign(order, req.body || {});
     await order.save();
 
     res.json({
@@ -199,7 +199,7 @@ export const remove = async (req, res, next) => {
 export const updateStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status } = req.body || {};
 
     const query = isValidObjectId(id)
       ? { $or: [{ _id: id }, { spo_id: id }] }
@@ -233,7 +233,7 @@ export const updateStatus = async (req, res, next) => {
 export const addPayment = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const paymentData = req.body;
+    const paymentData = req.body || {};
 
     const query = isValidObjectId(id)
       ? { $or: [{ _id: id }, { spo_id: id }] }
@@ -268,7 +268,7 @@ export const addPayment = async (req, res, next) => {
 export const receiveItems = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { item_id, quantity_received, condition, notes } = req.body;
+    const { item_id, quantity_received, condition, notes } = req.body || {};
 
     const query = isValidObjectId(id)
       ? { $or: [{ _id: id }, { spo_id: id }] }

@@ -20,7 +20,7 @@ const generateToken = (userId) => {
 // ===========================
 // Creates a new BUYER account
 export const register = catchAsync(async (req, res) => {
-  const { name, email, password, phone } = req.body;
+  const { name, email, password, phone } = req.body || {};
 
   // Check required fields
   if (!name || !email || !password) {
@@ -56,7 +56,7 @@ export const register = catchAsync(async (req, res) => {
 // POST /api/auth/login
 // ===========================
 export const login = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body || {};
 
   // Check required fields
   if (!email || !password) {
@@ -138,7 +138,7 @@ export const getMe = catchAsync(async (req, res) => {
 // ===========================
 // Generates a reset token and (in production) sends email
 export const forgotPassword = catchAsync(async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body || {};
 
   if (!email) {
     throw new AppError("Email is required", 400);
@@ -175,7 +175,7 @@ export const forgotPassword = catchAsync(async (req, res) => {
 // Verifies reset token and updates password
 export const resetPassword = catchAsync(async (req, res) => {
   const { token } = req.params;
-  const { password } = req.body;
+  const { password } = req.body || {};
 
   if (!password) {
     throw new AppError("New password is required", 400);
@@ -246,7 +246,7 @@ const validateStrongPassword = (password) => {
 // ===========================
 // Step 1: User provides basic info, system sends OTP to email
 export const initiateRegistration = catchAsync(async (req, res) => {
-  const { name, email, phone, company_name } = req.body;
+  const { name, email, phone, company_name } = req.body || {};
 
   // Validate required fields
   if (!name || !email || !phone || !company_name) {
@@ -325,7 +325,7 @@ export const initiateRegistration = catchAsync(async (req, res) => {
 // ===========================
 // Step 2: User verifies OTP
 export const verifyRegistrationOTP = catchAsync(async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, otp } = req.body || {};
 
   if (!email || !otp) {
     throw new AppError("Email and OTP are required", 400);
@@ -366,7 +366,7 @@ export const verifyRegistrationOTP = catchAsync(async (req, res) => {
 // ===========================
 // Step 3: User creates password and completes registration
 export const completeRegistration = catchAsync(async (req, res) => {
-  const { email, verification_token, password, confirm_password } = req.body;
+  const { email, verification_token, password, confirm_password } = req.body || {};
 
   if (!email || !verification_token || !password) {
     throw new AppError("Email, verification token, and password are required", 400);
@@ -433,7 +433,7 @@ export const completeRegistration = catchAsync(async (req, res) => {
 // ===========================
 // Resend OTP for registration
 export const resendRegistrationOTP = catchAsync(async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body || {};
 
   if (!email) {
     throw new AppError("Email is required", 400);
@@ -491,7 +491,7 @@ export const resendRegistrationOTP = catchAsync(async (req, res) => {
 // ===========================
 // Step 1: Send OTP to email for password reset
 export const forgotPasswordInitiate = catchAsync(async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body || {};
 
   if (!email) {
     throw new AppError("Email is required", 400);
@@ -543,7 +543,7 @@ export const forgotPasswordInitiate = catchAsync(async (req, res) => {
 // ===========================
 // Step 2: Verify OTP and return reset token
 export const forgotPasswordVerifyOTP = catchAsync(async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, otp } = req.body || {};
 
   if (!email || !otp) {
     throw new AppError("Email and OTP are required", 400);
@@ -583,7 +583,7 @@ export const forgotPasswordVerifyOTP = catchAsync(async (req, res) => {
 // ===========================
 // Step 3: Reset password with token
 export const forgotPasswordReset = catchAsync(async (req, res) => {
-  const { email, reset_token, new_password, confirm_password } = req.body;
+  const { email, reset_token, new_password, confirm_password } = req.body || {};
 
   if (!email || !reset_token || !new_password) {
     throw new AppError("Email, reset token, and new password are required", 400);
@@ -637,7 +637,7 @@ export const forgotPasswordReset = catchAsync(async (req, res) => {
 // ===========================
 // Resend OTP for password reset
 export const forgotPasswordResendOTP = catchAsync(async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body || {};
 
   if (!email) {
     throw new AppError("Email is required", 400);

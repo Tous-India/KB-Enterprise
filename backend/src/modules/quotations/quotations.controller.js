@@ -156,7 +156,7 @@ export const getByIdForBuyer = catchAsync(async (req, res) => {
 // Buyer only — accept a quotation
 export const accept = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { shipping_address } = req.body;
+  const { shipping_address } = req.body || {};
 
   const quotation = await Quotation.findById(id);
 
@@ -226,7 +226,7 @@ export const accept = catchAsync(async (req, res) => {
 // Buyer only — reject a quotation
 export const reject = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { reason } = req.body;
+  const { reason } = req.body || {};
 
   const quotation = await Quotation.findById(id);
 
