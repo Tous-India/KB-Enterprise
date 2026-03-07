@@ -540,7 +540,8 @@ describe('Users API Integration Tests', () => {
 
         const res = await request(app)
           .put(`/api/users/${pendingBuyer._id}/reject`)
-          .set('Authorization', `Bearer ${adminToken}`);
+          .set('Authorization', `Bearer ${adminToken}`)
+          .send({}); // Send empty body to avoid undefined req.body
 
         expect(res.status).toBe(400);
         expect(res.body.message).toContain('already rejected');

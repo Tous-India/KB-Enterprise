@@ -38,13 +38,13 @@ describe('Categories API Integration Tests', () => {
     });
     buyerToken = generateToken(buyerUser);
 
-    // Create test category
+    // Create test category with sub_category_id (schema uses _id: false for subdocs)
     testCategory = await Category.create({
       name: 'Electronics',
       description: 'Electronic products',
       sub_categories: [
-        { name: 'Computers', description: 'Computer equipment' },
-        { name: 'Phones', description: 'Mobile phones' },
+        { sub_category_id: 'SCAT-001', name: 'Computers', description: 'Computer equipment' },
+        { sub_category_id: 'SCAT-002', name: 'Phones', description: 'Mobile phones' },
       ],
     });
   });
@@ -153,14 +153,14 @@ describe('Categories API Integration Tests', () => {
           description: 'Tablet devices',
         });
 
-      expect(res.status).toBe(200);
+      expect(res.status).toBe(201);
       expect(res.body.data.category.sub_categories.some(s => s.name === 'Tablets')).toBe(true);
     });
   });
 
   describe('PUT /api/categories/:id/subcategories/:subId', () => {
     it('should update sub-category (admin)', async () => {
-      const subId = testCategory.sub_categories[0]._id;
+      const subId = testCategory.sub_categories[0].sub_category_id;
       const res = await request(app)
         .put(`/api/categories/${testCategory._id}/subcategories/${subId}`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -174,7 +174,7 @@ describe('Categories API Integration Tests', () => {
 
   describe('DELETE /api/categories/:id/subcategories/:subId', () => {
     it('should delete sub-category (admin)', async () => {
-      const subId = testCategory.sub_categories[0]._id;
+      const subId = testCategory.sub_categories[0].sub_category_id;
       const res = await request(app)
         .delete(`/api/categories/${testCategory._id}/subcategories/${subId}`)
         .set('Authorization', `Bearer ${adminToken}`);

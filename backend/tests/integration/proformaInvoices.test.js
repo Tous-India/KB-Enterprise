@@ -116,7 +116,7 @@ describe('Proforma Invoices API Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.proformaInvoice.proforma_number).toBe(testPI.proforma_number);
+      expect(res.body.data.proforma.proforma_number).toBe(testPI.proforma_number);
     });
 
     it('should fetch own proforma invoice (buyer)', async () => {
@@ -165,19 +165,29 @@ describe('Proforma Invoices API Integration Tests', () => {
         .post('/api/proforma-invoices')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          quotation: acceptedQuotation._id,
+          quotation_id: acceptedQuotation._id,
           payment_terms: 'NET30',
         });
 
       expect(res.status).toBe(201);
-      expect(res.body.data.proformaInvoice.proforma_number).toBeDefined();
+      expect(res.body.data.proforma.proforma_number).toBeDefined();
     });
   });
 
   describe('PUT /api/proforma-invoices/:id', () => {
     it('should update proforma invoice (admin)', async () => {
+      // Create a PENDING PI for update test (only PENDING/SENT can be updated)
+      const pendingPI = await ProformaInvoice.create({
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        buyer_email: buyerUser.email,
+        status: 'PENDING',
+        items: [],
+        total_amount: 500,
+      });
+
       const res = await request(app)
-        .put(`/api/proforma-invoices/${testPI._id}`)
+        .put(`/api/proforma-invoices/${pendingPI._id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           payment_terms: 'NET60',
@@ -185,20 +195,28 @@ describe('Proforma Invoices API Integration Tests', () => {
         });
 
       expect(res.status).toBe(200);
+      expect(res.body.data.proforma.payment_terms).toBe('NET60');
     });
   });
 
   describe('PUT /api/proforma-invoices/:id/approve', () => {
     it('should approve proforma invoice (admin)', async () => {
-      testPI.status = 'PENDING';
-      await testPI.save();
+      // Create a PENDING PI for approval test
+      const pendingPI = await ProformaInvoice.create({
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        buyer_email: buyerUser.email,
+        status: 'PENDING',
+        items: [],
+        total_amount: 500,
+      });
 
       const res = await request(app)
-        .put(`/api/proforma-invoices/${testPI._id}/approve`)
+        .put(`/api/proforma-invoices/${pendingPI._id}/approve`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.proformaInvoice.status).toBe('APPROVED');
+      expect(res.body.data.proforma.status).toBe('APPROVED');
     });
   });
 

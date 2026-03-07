@@ -199,10 +199,10 @@ describe('Quotations API Integration Tests', () => {
     });
   });
 
-  describe('GET /api/quotations/:id/view', () => {
+  describe('GET /api/quotations/:id (buyer view)', () => {
     it('should fetch own quotation (buyer)', async () => {
       const res = await request(app)
-        .get(`/api/quotations/${testQuotation._id}/view`)
+        .get(`/api/quotations/${testQuotation._id}`)
         .set('Authorization', `Bearer ${buyerToken}`);
 
       expect(res.status).toBe(200);
@@ -221,7 +221,7 @@ describe('Quotations API Integration Tests', () => {
       const anotherToken = generateToken(anotherBuyer);
 
       const res = await request(app)
-        .get(`/api/quotations/${testQuotation._id}/view`)
+        .get(`/api/quotations/${testQuotation._id}`)
         .set('Authorization', `Bearer ${anotherToken}`);
 
       expect(res.status).toBe(403);
@@ -229,7 +229,7 @@ describe('Quotations API Integration Tests', () => {
 
     it('should allow admin to view any quotation', async () => {
       const res = await request(app)
-        .get(`/api/quotations/${testQuotation._id}/view`)
+        .get(`/api/quotations/${testQuotation._id}`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
@@ -338,8 +338,29 @@ describe('Quotations API Integration Tests', () => {
 
   describe('PUT /api/quotations/:id/accept', () => {
     it('should accept quotation (buyer)', async () => {
+      // Create a fresh SENT quotation for this test
+      const sentQuotation = await Quotation.create({
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        customer_email: buyerUser.email,
+        status: 'SENT',
+        items: [
+          {
+            product: testProduct._id,
+            part_number: testProduct.part_number,
+            product_name: testProduct.product_name,
+            quantity: 5,
+            unit_price: 100,
+            total_price: 500,
+          },
+        ],
+        subtotal: 500,
+        total_amount: 500,
+        expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
+
       const res = await request(app)
-        .put(`/api/quotations/${testQuotation._id}/accept`)
+        .put(`/api/quotations/${sentQuotation._id}/accept`)
         .set('Authorization', `Bearer ${buyerToken}`)
         .send({
           shipping_address: {
@@ -357,24 +378,40 @@ describe('Quotations API Integration Tests', () => {
     });
 
     it('should reject non-SENT quotation', async () => {
-      testQuotation.status = 'DRAFT';
-      await testQuotation.save();
+      // Create a DRAFT quotation
+      const draftQuotation = await Quotation.create({
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        status: 'DRAFT',
+        items: [],
+        total_amount: 500,
+      });
 
       const res = await request(app)
-        .put(`/api/quotations/${testQuotation._id}/accept`)
-        .set('Authorization', `Bearer ${buyerToken}`);
+        .put(`/api/quotations/${draftQuotation._id}/accept`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({}); // Send empty body to avoid undefined req.body
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain('Only SENT quotations');
     });
 
     it('should reject expired quotation', async () => {
-      testQuotation.expiry_date = new Date(Date.now() - 24 * 60 * 60 * 1000); // Yesterday
-      await testQuotation.save();
+      // Create an expired SENT quotation
+      const expiredQuotation = await Quotation.create({
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        customer_email: buyerUser.email,
+        status: 'SENT',
+        items: [],
+        total_amount: 500,
+        expiry_date: new Date(Date.now() - 24 * 60 * 60 * 1000), // Yesterday
+      });
 
       const res = await request(app)
-        .put(`/api/quotations/${testQuotation._id}/accept`)
-        .set('Authorization', `Bearer ${buyerToken}`);
+        .put(`/api/quotations/${expiredQuotation._id}/accept`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({}); // Send empty body to avoid undefined req.body
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain('expired');
@@ -391,17 +428,31 @@ describe('Quotations API Integration Tests', () => {
       });
       const anotherToken = generateToken(anotherBuyer);
 
+      // testQuotation belongs to buyerUser, not anotherBuyer
       const res = await request(app)
         .put(`/api/quotations/${testQuotation._id}/accept`)
-        .set('Authorization', `Bearer ${anotherToken}`);
+        .set('Authorization', `Bearer ${anotherToken}`)
+        .send({}); // Send empty body to avoid undefined req.body
 
       expect(res.status).toBe(403);
     });
 
     it('should allow admin to accept any quotation', async () => {
+      // Create a fresh SENT quotation for admin to accept
+      const sentQuotation = await Quotation.create({
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        customer_email: buyerUser.email,
+        status: 'SENT',
+        items: [],
+        total_amount: 500,
+        expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
+
       const res = await request(app)
-        .put(`/api/quotations/${testQuotation._id}/accept`)
-        .set('Authorization', `Bearer ${adminToken}`);
+        .put(`/api/quotations/${sentQuotation._id}/accept`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({}); // Send empty body to avoid undefined req.body
 
       expect(res.status).toBe(200);
       expect(res.body.data.quotation.status).toBe('ACCEPTED');
@@ -410,8 +461,19 @@ describe('Quotations API Integration Tests', () => {
 
   describe('PUT /api/quotations/:id/reject', () => {
     it('should reject quotation (buyer)', async () => {
+      // Create a fresh SENT quotation for rejection
+      const sentQuotation = await Quotation.create({
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        customer_email: buyerUser.email,
+        status: 'SENT',
+        items: [],
+        total_amount: 500,
+        expiry_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
+
       const res = await request(app)
-        .put(`/api/quotations/${testQuotation._id}/reject`)
+        .put(`/api/quotations/${sentQuotation._id}/reject`)
         .set('Authorization', `Bearer ${buyerToken}`)
         .send({
           reason: 'Price too high',
@@ -423,12 +485,19 @@ describe('Quotations API Integration Tests', () => {
     });
 
     it('should reject non-SENT quotation', async () => {
-      testQuotation.status = 'ACCEPTED';
-      await testQuotation.save();
+      // Create an ACCEPTED quotation
+      const acceptedQuotation = await Quotation.create({
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        status: 'ACCEPTED',
+        items: [],
+        total_amount: 500,
+      });
 
       const res = await request(app)
-        .put(`/api/quotations/${testQuotation._id}/reject`)
-        .set('Authorization', `Bearer ${buyerToken}`);
+        .put(`/api/quotations/${acceptedQuotation._id}/reject`)
+        .set('Authorization', `Bearer ${buyerToken}`)
+        .send({}); // Send empty body to avoid undefined req.body
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain('Only SENT quotations');
@@ -445,9 +514,11 @@ describe('Quotations API Integration Tests', () => {
       });
       const anotherToken = generateToken(anotherBuyer);
 
+      // testQuotation belongs to buyerUser, not anotherBuyer
       const res = await request(app)
         .put(`/api/quotations/${testQuotation._id}/reject`)
-        .set('Authorization', `Bearer ${anotherToken}`);
+        .set('Authorization', `Bearer ${anotherToken}`)
+        .send({}); // Send empty body to avoid undefined req.body
 
       expect(res.status).toBe(403);
     });

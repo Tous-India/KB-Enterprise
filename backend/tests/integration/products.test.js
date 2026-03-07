@@ -392,13 +392,17 @@ describe('Products API Integration Tests', () => {
         .send({
           total_quantity: 500,
           stock_status: 'In Stock',
-          available_locations: ['Warehouse A', 'Warehouse B'],
+          available_locations: [
+            { location: 'Warehouse A', quantity: 300 },
+            { location: 'Warehouse B', quantity: 200 },
+          ],
         });
 
       expect(res.status).toBe(200);
       expect(res.body.data.product.total_quantity).toBe(500);
       expect(res.body.data.product.stock_status).toBe('In Stock');
-      expect(res.body.data.product.available_locations).toContain('Warehouse A');
+      expect(res.body.data.product.available_locations.length).toBe(2);
+      expect(res.body.data.product.available_locations[0].location).toBe('Warehouse A');
     });
 
     it('should update partial inventory fields', async () => {

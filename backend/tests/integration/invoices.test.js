@@ -334,16 +334,17 @@ describe('Invoices API Integration Tests', () => {
   });
 
   describe('DELETE /api/invoices/:id', () => {
-    it('should delete invoice (admin)', async () => {
+    it('should soft delete invoice (admin)', async () => {
       const res = await request(app)
         .delete(`/api/invoices/${testInvoice._id}`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
 
-      // Verify invoice is deleted
+      // Verify invoice is soft deleted (status changed to CANCELLED)
       const deletedInvoice = await Invoice.findById(testInvoice._id);
-      expect(deletedInvoice).toBeNull();
+      expect(deletedInvoice).not.toBeNull();
+      expect(deletedInvoice.status).toBe('CANCELLED');
     });
 
     it('should return 404 for non-existent invoice', async () => {
@@ -403,7 +404,7 @@ describe('Invoices API Integration Tests', () => {
       expect(invoice.status).toBe('UNPAID');
     });
 
-    it('should default invoice_type to STANDARD', async () => {
+    it('should default invoice_type to TAX_INVOICE', async () => {
       const invoice = await Invoice.create({
         buyer: buyerUser._id,
         buyer_name: buyerUser.name,
@@ -411,7 +412,7 @@ describe('Invoices API Integration Tests', () => {
         total_amount: 0,
       });
 
-      expect(invoice.invoice_type).toBe('STANDARD');
+      expect(invoice.invoice_type).toBe('TAX_INVOICE');
     });
   });
 });

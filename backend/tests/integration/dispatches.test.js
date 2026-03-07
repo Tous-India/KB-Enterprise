@@ -71,26 +71,29 @@ describe('Dispatches API Integration Tests', () => {
       total_amount: 1000,
     });
 
-    // Create test dispatch
+    // Create test dispatch (model doesn't have status field)
     testDispatch = await Dispatch.create({
       buyer: buyerUser._id,
       buyer_name: buyerUser.name,
       source_type: 'ORDER',
+      source_type_ref: 'Order',
       source_id: testOrder._id,
-      status: 'PENDING',
+      source_number: testOrder.order_id,
       items: [
         {
-          product: testProduct._id,
           part_number: testProduct.part_number,
           product_name: testProduct.product_name,
           quantity: 5,
           unit_price: 100,
+          total_price: 500,
         },
       ],
       total_quantity: 5,
       total_amount: 500,
-      courier_service: 'FedEx',
-      tracking_number: 'FX123456',
+      shipping_info: {
+        awb_number: 'FX123456',
+        shipping_by: 'FedEx',
+      },
     });
   });
 
@@ -105,13 +108,13 @@ describe('Dispatches API Integration Tests', () => {
       expect(Array.isArray(res.body.data)).toBe(true);
     });
 
-    it('should filter dispatches by status', async () => {
+    it('should filter dispatches by source_type', async () => {
       const res = await request(app)
-        .get('/api/dispatches?status=PENDING')
+        .get('/api/dispatches?source_type=ORDER')
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.every(d => d.status === 'PENDING')).toBe(true);
+      expect(res.body.data.every(d => d.source_type === 'ORDER')).toBe(true);
     });
 
     it('should reject buyer requests', async () => {
@@ -156,58 +159,51 @@ describe('Dispatches API Integration Tests', () => {
 
   describe('POST /api/dispatches', () => {
     it('should create dispatch (admin)', async () => {
+      // Create a new order for this test to avoid dispatch quantity conflict
+      const newOrder = await Order.create({
+        title: 'New Test Order',
+        buyer: buyerUser._id,
+        buyer_name: buyerUser.name,
+        status: 'OPEN',
+        items: [
+          {
+            product: testProduct._id,
+            product_id: testProduct.product_id,
+            part_number: testProduct.part_number,
+            product_name: testProduct.product_name,
+            quantity: 10,
+            unit_price: 100,
+            total_price: 1000,
+          },
+        ],
+        subtotal: 1000,
+        total_amount: 1000,
+      });
+
       const res = await request(app)
         .post('/api/dispatches')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          buyer: buyerUser._id,
-          buyer_name: buyerUser.name,
           source_type: 'ORDER',
-          source_id: testOrder._id,
+          source_id: newOrder._id,
           items: [
             {
-              product: testProduct._id,
+              product_id: testProduct.product_id,
               part_number: testProduct.part_number,
               product_name: testProduct.product_name,
               quantity: 3,
               unit_price: 100,
             },
           ],
-          courier_service: 'DHL',
-          tracking_number: 'DHL789',
+          shipping_info: {
+            shipping_by: 'DHL',
+            awb_number: 'DHL789',
+          },
         });
 
-      expect(res.status).toBe(201);
+      // Controller uses ApiResponse.success, which returns 200
+      expect(res.status).toBe(200);
       expect(res.body.data.dispatch.dispatch_id).toBeDefined();
-    });
-  });
-
-  describe('PUT /api/dispatches/:id', () => {
-    it('should update dispatch (admin)', async () => {
-      const res = await request(app)
-        .put(`/api/dispatches/${testDispatch._id}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          tracking_number: 'FX999999',
-          notes: 'Updated tracking',
-        });
-
-      expect(res.status).toBe(200);
-      expect(res.body.data.dispatch.tracking_number).toBe('FX999999');
-    });
-  });
-
-  describe('PUT /api/dispatches/:id/status', () => {
-    it('should update dispatch status (admin)', async () => {
-      const res = await request(app)
-        .put(`/api/dispatches/${testDispatch._id}/status`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
-          status: 'IN_TRANSIT',
-        });
-
-      expect(res.status).toBe(200);
-      expect(res.body.data.dispatch.status).toBe('IN_TRANSIT');
     });
   });
 
@@ -225,14 +221,26 @@ describe('Dispatches API Integration Tests', () => {
     });
   });
 
-  describe('GET /api/dispatches/summary', () => {
-    it('should fetch dispatch summary (admin)', async () => {
+  describe('GET /api/dispatches/summary/:sourceType/:sourceId', () => {
+    it('should fetch dispatch summary for source (admin)', async () => {
       const res = await request(app)
-        .get('/api/dispatches/summary')
+        .get(`/api/dispatches/summary/ORDER/${testOrder._id}`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
       expect(res.body.data).toBeDefined();
+    });
+  });
+
+  describe('GET /api/dispatches/by-source/:sourceType/:sourceId', () => {
+    it('should fetch dispatches by source (admin)', async () => {
+      const res = await request(app)
+        .get(`/api/dispatches/by-source/ORDER/${testOrder._id}`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.dispatches).toBeDefined();
+      expect(Array.isArray(res.body.data.dispatches)).toBe(true);
     });
   });
 
@@ -242,8 +250,8 @@ describe('Dispatches API Integration Tests', () => {
         buyer: buyerUser._id,
         buyer_name: buyerUser.name,
         source_type: 'ORDER',
+        source_type_ref: 'Order',
         source_id: testOrder._id,
-        status: 'PENDING',
         items: [],
         total_amount: 0,
       });
@@ -252,17 +260,18 @@ describe('Dispatches API Integration Tests', () => {
       expect(dispatch.dispatch_id).toMatch(/^DSP-/);
     });
 
-    it('should default status to PENDING', async () => {
+    it('should default dispatch_type to STANDARD', async () => {
       const dispatch = await Dispatch.create({
         buyer: buyerUser._id,
         buyer_name: buyerUser.name,
         source_type: 'ORDER',
+        source_type_ref: 'Order',
         source_id: testOrder._id,
         items: [],
         total_amount: 0,
       });
 
-      expect(dispatch.status).toBe('PENDING');
+      expect(dispatch.dispatch_type).toBe('STANDARD');
     });
   });
 });

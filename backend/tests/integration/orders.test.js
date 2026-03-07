@@ -342,11 +342,11 @@ describe('Orders API Integration Tests', () => {
     });
 
     it('should reject non-accepted quotation', async () => {
-      // Create pending quotation
-      const pendingQuote = await Quotation.create({
+      // Create draft quotation (not yet accepted)
+      const draftQuote = await Quotation.create({
         buyer: buyerUser._id,
         buyer_name: buyerUser.name,
-        status: 'PENDING',
+        status: 'DRAFT',
         items: [],
         total_amount: 500,
       });
@@ -355,7 +355,7 @@ describe('Orders API Integration Tests', () => {
         .post('/api/orders')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          quotation: pendingQuote._id,
+          quotation: draftQuote._id,
         });
 
       expect(res.status).toBe(400);
