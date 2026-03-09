@@ -313,7 +313,7 @@ const AuthPage = () => {
         >
           <Box
             component="img"
-            src="/kb.jpg"
+            src="/kb-logo.webp"
             alt="KB Logo"
             sx={{ height: 48, borderRadius: 1.5, mb: 1, boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}
             onError={(e) => { e.target.style.display = "none"; }}
@@ -772,10 +772,10 @@ const AuthPage = () => {
               },
             }}
           >
-            <Box sx={{ position: "relative", textAlign: "center", color: "#fff", px: 4 }}>
+            <Box sx={{ position: "relative", textAlign: "center", color: "#fff", px: 4,display: "flex", flexDirection: "column", alignItems: "center",justifyContent: "center"   }}>
               <Box
                 component="img"
-                src="/kb.jpg"
+                src="/kb-logo.webp"
                 alt="KB Logo"
                 sx={{ height: 70, mb: 2, borderRadius: 2, boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}
                 onError={(e) => { e.target.style.display = "none"; }}

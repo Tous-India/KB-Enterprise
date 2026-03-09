@@ -38,6 +38,7 @@ frontend2/
 │   ├── kb.jpg                    # Company logo
 │   ├── bg.webp                   # Background image
 │   └── login.webp                # Login page image
+│   └── kb-logo.webp              #new logo for login
 │
 └── src/
     ├── App.jsx                   # Root component with routing

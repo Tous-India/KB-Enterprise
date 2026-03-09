@@ -134,7 +134,7 @@ const Login = () => {
           <Box sx={{ display: "flex", alignItems: "center", mb: 4 }}>
             <Box
               component="img"
-              src="/kb.jpg"
+              src="/kb-logo.webp"
               alt="KB Logo"
               sx={{ height: 60 }}
               onError={(e) => {
