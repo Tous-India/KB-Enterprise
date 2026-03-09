@@ -3,17 +3,14 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first for better caching
 COPY package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy only required project files
-COPY index.html ./
-COPY vite.config.* ./
-COPY src ./src
-COPY public ./public
+# Copy all source files
+COPY . .
 
 # Build project
 RUN npm run build
