@@ -122,3 +122,11 @@ e2e/
 *.rar
 *.7z
 *.bz2
+
+node_modules
+dist
+.git
+.gitignore
+Dockerfile
+.dockerignore
+.env

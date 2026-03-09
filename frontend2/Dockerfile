@@ -1,7 +1,3 @@
-# ============================================
-# KB CRM Frontend - Production Image
-# ============================================
-
 # ---------- Build Stage ----------
 FROM node:20-alpine AS build
 
@@ -13,8 +9,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy only required project files
+COPY index.html ./
+COPY vite.config.* ./
+COPY src ./src
+COPY public ./public
 
 # Build project
 RUN npm run build
@@ -23,7 +22,6 @@ RUN npm run build
 # ---------- Production Stage ----------
 FROM nginx:alpine
 
-# Copy build files to nginx
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
