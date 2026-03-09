@@ -15,8 +15,13 @@ const app = express();
 // ===========================
 app.use(helmet());
 
-// CORS - Support multiple origins (comma-separated in .env)
-const allowedOrigins = config.corsOrigin.split(",").map((o) => o.trim());
+// CORS - Support multiple origins
+const allowedOrigins = [
+  "https://crm.kbenterprise.org",
+  "http://localhost:5173",
+  "http://localhost:3000",
+  ...config.corsOrigin.split(",").map((o) => o.trim()),
+];
 app.use(
   cors({
     origin: (origin, callback) => {
