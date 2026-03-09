@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 // Get configuration from environment variables
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+// Default to '/api' for production (nginx proxies to backend)
+// Set VITE_API_BASE_URL=http://localhost:5000/api for local development
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT) || 10000;
 
 // Create axios instance with default configuration
