@@ -1,28 +1,26 @@
 # ============================================
-# KB CRM Frontend - Docker Image
-# React/Vite Application
+# KB CRM Frontend - Production Image
 # ============================================
 
-FROM node:20-alpine
+# Build Stage
+FROM node:20-alpine AS build
 
-# Install git (needed for some npm packages)
-RUN apk add --no-cache git
-
-# Set working directory
 WORKDIR /app
 
-# Copy package files first (better layer caching)
 COPY package*.json ./
 
-# Copy source code
+RUN npm ci
+
 COPY . .
 
-# Expose Vite dev server port
-EXPOSE 5173
+RUN npm run build
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:5173 || exit 1
 
-# Install dependencies and start dev server
-CMD ["sh", "-c", "npm install && npm run dev -- --host"]
+# Production Stage
+FROM nginx:alpine
+
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

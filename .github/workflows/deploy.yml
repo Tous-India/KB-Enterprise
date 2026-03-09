@@ -107,6 +107,8 @@ jobs:
             docker compose pull
 
             echo "Restarting containers..."
+            docker compose pull
+            docker compose down
             docker compose up -d --remove-orphans
 
             sleep 20
