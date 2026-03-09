@@ -1,5 +1,3 @@
-# version: '3.8'
-
 services:
   backend:
     image: kbenterprises/servercrm:latest
@@ -22,7 +20,7 @@ services:
     expose:
       - "5173"
     environment:
-      - VITE_API_BASE_URL=https://crm.kbenterprise.org/api
+      - VITE_API_BASE_URL=http://187.124.97.189/api
     depends_on:
       - backend
     networks:
