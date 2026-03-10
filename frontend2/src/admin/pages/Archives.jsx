@@ -668,7 +668,7 @@ const Archives = () => {
             <Tooltip title="Download File">
               <IconButton
                 size="small"
-                onClick={() => archivesService.downloadFile(params.row._id)}
+                onClick={() => archivesService.downloadFile(params.row.file.path)}
                 color="success"
               >
                 <DownloadIcon fontSize="small" />
@@ -1266,6 +1266,34 @@ const Archives = () => {
                   </TableBody>
                 </Table>
               </Box>
+
+              {/* Uploaded File Preview */}
+              {selectedArchive.file?.path && (
+                <Box sx={{ mt: 3, borderTop: '2px solid #000', pt: 2 }}>
+                  <Typography sx={{ fontWeight: 'bold', mb: 1, fontSize: '14px' }}>
+                    Uploaded Document: {selectedArchive.file.filename}
+                  </Typography>
+                  {selectedArchive.file.mimetype === 'application/pdf' ? (
+                    <Box sx={{ height: 500, border: '1px solid #ddd', borderRadius: 1 }}>
+                      <iframe
+                        src={selectedArchive.file.path}
+                        width="100%"
+                        height="100%"
+                        title="PDF Preview"
+                        style={{ border: 'none' }}
+                      />
+                    </Box>
+                  ) : (
+                    <Button
+                      variant="contained"
+                      startIcon={<DownloadIcon />}
+                      onClick={() => window.open(selectedArchive.file.path, '_blank')}
+                    >
+                      Download {selectedArchive.file.filename}
+                    </Button>
+                  )}
+                </Box>
+              )}
             </Box>
           );
           })()}

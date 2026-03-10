@@ -257,12 +257,16 @@ const archivesService = {
   },
 
   /**
-   * Download archive file
-   * @param {string} id - Archive ID
+   * Download archive file using direct file path
+   * Files are served statically at /uploads (no auth required)
+   * @param {string} filePath - Direct file path (e.g., "/uploads/archives/123-doc.pdf")
    */
-  downloadFile: (id) => {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
-    window.open(`${baseUrl}${ENDPOINTS.ARCHIVES.DOWNLOAD(id)}`, '_blank');
+  downloadFile: (filePath) => {
+    if (!filePath) {
+      console.error('[Archives Service] No file path provided');
+      return;
+    }
+    window.open(filePath, '_blank');
   },
 };
 
