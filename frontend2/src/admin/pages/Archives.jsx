@@ -572,7 +572,7 @@ const Archives = () => {
     {
       field: 'archive_id',
       headerName: 'Archive ID',
-      width: 130,
+      width: 120,
       renderCell: (params) => (
         <Chip
           label={params.value}
@@ -592,7 +592,8 @@ const Archives = () => {
           size="small"
           color={
             params.value === 'INVOICE' ? 'success' :
-            params.value === 'ORDER' ? 'primary' :
+            params.value === 'PI' ? 'warning' :
+            params.value === 'PO' ? 'primary' :
             params.value === 'QUOTATION' ? 'info' :
             'default'
           }
@@ -600,52 +601,42 @@ const Archives = () => {
       ),
     },
     {
-      field: 'original_reference',
-      headerName: 'Reference',
-      width: 150,
+      field: 'document_name',
+      headerName: 'Document Name',
+      width: 200,
+      valueGetter: (params) => params.row.document_name || params.row.original_reference || '-',
     },
     {
-      field: 'buyer_name',
-      headerName: 'Buyer',
+      field: 'company_name',
+      headerName: 'Company',
       width: 180,
+      valueGetter: (params) => params.row.company_name || params.row.buyer_company || params.row.buyer_name || '-',
+    },
+    {
+      field: 'document_number',
+      headerName: 'Doc Number',
+      width: 130,
+      valueGetter: (params) => params.row.document_number || '-',
     },
     {
       field: 'document_date',
       headerName: 'Date',
-      width: 120,
+      width: 110,
       valueFormatter: (params) => {
         if (!params.value) return '-';
         return new Date(params.value).toLocaleDateString();
       },
     },
     {
-      field: 'fiscal_year',
-      headerName: 'FY',
-      width: 100,
-    },
-    {
-      field: 'total_amount',
-      headerName: 'Amount (USD)',
-      width: 130,
-      valueFormatter: (params) => {
-        return `$${params.value?.toLocaleString() || 0}`;
-      },
-    },
-    {
-      field: 'payment_status',
-      headerName: 'Status',
-      width: 100,
+      field: 'file_status',
+      headerName: 'File',
+      width: 80,
       renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          color={
-            params.value === 'PAID' ? 'success' :
-            params.value === 'PARTIAL' ? 'warning' :
-            params.value === 'UNPAID' ? 'error' :
-            'default'
-          }
-        />
+        params.row.file?.filename ? (
+          <Chip label="PDF" size="small" color="success" variant="outlined" />
+        ) : (
+          <Chip label="None" size="small" color="default" variant="outlined" />
+        )
       ),
     },
     {
