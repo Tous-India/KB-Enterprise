@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import Archive from "./archives.model.js";
 import catchAsync from "../../utils/catchAsync.js";
 import ApiResponse from "../../utils/apiResponse.js";
@@ -6,6 +9,39 @@ import AppError from "../../utils/AppError.js";
 
 // Helper to check if string is valid ObjectId
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+// ===========================
+// Multer Configuration for File Uploads
+// ===========================
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = "uploads/archives";
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${file.originalname.replace(/\s+/g, "_")}`;
+    cb(null, uniqueName);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowed = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".jpeg", ".png"];
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (allowed.includes(ext)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Invalid file type. Allowed: PDF, Word, Excel, Images"), false);
+  }
+};
+
+export const uploadMiddleware = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+  fileFilter,
+});
 
 // ===========================
 // GET /api/archives
@@ -89,6 +125,9 @@ export const getAll = catchAsync(async (req, res) => {
       { buyer_name: { $regex: search, $options: "i" } },
       { buyer_company: { $regex: search, $options: "i" } },
       { buyer_email: { $regex: search, $options: "i" } },
+      { document_name: { $regex: search, $options: "i" } },
+      { document_number: { $regex: search, $options: "i" } },
+      { company_name: { $regex: search, $options: "i" } },
       { "items.part_number": { $regex: search, $options: "i" } },
       { "items.product_name": { $regex: search, $options: "i" } },
     ];
@@ -472,4 +511,96 @@ export const getBuyers = catchAsync(async (req, res) => {
   ]);
 
   return ApiResponse.success(res, { buyers }, "Buyers fetched");
+});
+
+// ===========================
+// POST /api/archives/upload
+// ===========================
+// Admin only — create archive with file upload
+export const createWithFile = catchAsync(async (req, res) => {
+  const {
+    document_type,
+    document_date,
+    company_name,
+    document_name,
+    document_number,
+    notes,
+    fiscal_year,
+  } = req.body || {};
+
+  // Validation
+  if (!document_type) {
+    throw new AppError("Document type is required", 400);
+  }
+  if (!document_date) {
+    throw new AppError("Document date is required", 400);
+  }
+  if (!company_name) {
+    throw new AppError("Company name is required", 400);
+  }
+  if (!document_name) {
+    throw new AppError("Document name is required", 400);
+  }
+  if (!document_number) {
+    throw new AppError("Document number is required", 400);
+  }
+
+  const archiveData = {
+    document_type,
+    document_date: new Date(document_date),
+    company_name,
+    document_name,
+    document_number,
+    buyer_name: company_name, // Also set buyer_name for consistency
+    notes: notes || "",
+    fiscal_year: fiscal_year || "",
+    source_system: "MANUAL_UPLOAD",
+    tags: ["manual-upload"],
+    created_by: req.user._id,
+  };
+
+  // Handle file upload
+  if (req.file) {
+    archiveData.file = {
+      filename: req.file.originalname,
+      path: `/uploads/archives/${req.file.filename}`,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      uploaded_at: new Date(),
+    };
+  }
+
+  const archive = await Archive.create(archiveData);
+
+  return ApiResponse.created(res, { archive }, "Archive created successfully");
+});
+
+// ===========================
+// GET /api/archives/download/:id
+// ===========================
+// Admin only — download archive file
+export const downloadFile = catchAsync(async (req, res) => {
+  const { id } = req.params;
+
+  const query = isValidObjectId(id)
+    ? { $or: [{ _id: id }, { archive_id: id }] }
+    : { archive_id: id };
+
+  const archive = await Archive.findOne(query);
+
+  if (!archive) {
+    throw new AppError("Archive not found", 404);
+  }
+
+  if (!archive.file || !archive.file.path) {
+    throw new AppError("No file attached to this archive", 404);
+  }
+
+  const filePath = path.join(process.cwd(), archive.file.path);
+
+  if (!fs.existsSync(filePath)) {
+    throw new AppError("File not found on server", 404);
+  }
+
+  res.download(filePath, archive.file.filename);
 });

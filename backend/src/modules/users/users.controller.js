@@ -192,13 +192,17 @@ export const changePassword = catchAsync(async (req, res) => {
 // ===========================
 // POST /api/users
 // ===========================
-// Admin only — create a buyer account
+// Admin only — create a user account (BUYER or SUB_ADMIN)
 export const create = catchAsync(async (req, res) => {
-  const { name, email, password, phone, address, company_details } = req.body;
+  const { name, email, password, phone, address, company_details, role } = req.body;
 
   if (!name || !email || !password) {
     throw new AppError("Name, email and password are required", 400);
   }
+
+  // Validate role - only BUYER or SUB_ADMIN allowed (not SUPER_ADMIN)
+  const allowedRoles = [ROLES.BUYER, ROLES.SUB_ADMIN];
+  const userRole = role && allowedRoles.includes(role) ? role : ROLES.BUYER;
 
   const existing = await User.findOne({ email });
   if (existing) {
@@ -212,14 +216,15 @@ export const create = catchAsync(async (req, res) => {
     phone,
     address,
     company_details,
-    role: ROLES.BUYER,
+    role: userRole,
   });
 
   // Remove password from response
   const userObj = user.toObject();
   delete userObj.password;
 
-  return ApiResponse.created(res, { user: userObj }, "Buyer created");
+  const roleLabel = userRole === ROLES.SUB_ADMIN ? "Sub Admin" : "Buyer";
+  return ApiResponse.created(res, { user: userObj }, `${roleLabel} created`);
 });
 
 // ===========================

@@ -238,6 +238,7 @@ function Users() {
       email: userForm.email,
       password: userForm.password,
       phone: userForm.phone,
+      role: userForm.role,
       address: userForm.address,
       company_details: userForm.company_details,
     };
@@ -1346,6 +1347,19 @@ function Users() {
                 value={userForm.phone}
                 onChange={(e) => updateUserForm("phone", e.target.value)}
               />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormControl fullWidth>
+                <InputLabel>Role</InputLabel>
+                <Select
+                  value={userForm.role}
+                  label="Role"
+                  onChange={(e) => updateUserForm("role", e.target.value)}
+                >
+                  <MenuItem value="BUYER">Buyer</MenuItem>
+                  <MenuItem value="SUB_ADMIN">Sub Admin</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
 
             <Grid size={{ xs: 12 }}>

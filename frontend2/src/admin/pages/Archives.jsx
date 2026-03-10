@@ -24,6 +24,10 @@ import {
   Alert,
   Tooltip,
   Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  Stack,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
 import {
@@ -37,14 +41,24 @@ import {
   FileDownload as DownloadIcon,
   Print as PrintIcon,
   Assessment as StatsIcon,
+  CloudUpload as CloudUploadIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import html2pdf from 'html2pdf.js';
 import archivesService from '../../services/archives.service';
 import useArchivesStore from '../../stores/useArchivesStore';
 
-const DOCUMENT_TYPES = ['INVOICE', 'ORDER', 'QUOTATION', 'PI', 'PAYMENT', 'OTHER'];
+const DOCUMENT_TYPES = ['INVOICE', 'ORDER', 'QUOTATION', 'PI', 'PO', 'PAYMENT', 'OTHER'];
 const PAYMENT_STATUSES = ['PAID', 'PARTIAL', 'UNPAID', 'REFUNDED', 'CANCELLED'];
+
+// Document types for manual upload
+const UPLOAD_DOC_TYPES = [
+  { value: 'INVOICE', label: 'Invoice' },
+  { value: 'PI', label: 'Proforma Invoice (PI)' },
+  { value: 'PO', label: 'Purchase Order (PO)' },
+  { value: 'QUOTATION', label: 'Quotation' },
+  { value: 'OTHER', label: 'Other' },
+];
 
 // Helper function to convert number to words (Indian format)
 const numberToWords = (num) => {
@@ -335,6 +349,19 @@ const Archives = () => {
   const [loading, setLoading] = useState(false);
   const [showStats, setShowStats] = useState(false);
 
+  // Create modal state
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [createForm, setCreateForm] = useState({
+    document_type: '',
+    document_date: '',
+    company_name: '',
+    document_name: '',
+    document_number: '',
+    notes: '',
+  });
+
   const {
     filters,
     setFilter,
@@ -452,6 +479,94 @@ const Archives = () => {
     setTimeout(() => fetchArchives(), 100);
   };
 
+  // Handle create form change
+  const handleCreateFormChange = (field, value) => {
+    setCreateForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Invalid file type. Please upload PDF, Word, or Excel files only.');
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size exceeds 10MB limit.');
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  // Handle create archive submit
+  const handleCreateArchive = async () => {
+    // Validate required fields
+    if (!createForm.document_type || !createForm.document_date || !createForm.company_name ||
+        !createForm.document_name || !createForm.document_number || !selectedFile) {
+      toast.error('Please fill in all required fields and upload a file.');
+      return;
+    }
+
+    setCreateLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('document_type', createForm.document_type);
+      formData.append('document_date', createForm.document_date);
+      formData.append('company_name', createForm.company_name);
+      formData.append('document_name', createForm.document_name);
+      formData.append('document_number', createForm.document_number);
+      formData.append('notes', createForm.notes || '');
+      formData.append('file', selectedFile);
+
+      const result = await archivesService.createWithFile(formData);
+      if (result.success) {
+        toast.success('Archive created successfully');
+        setIsCreateOpen(false);
+        setCreateForm({
+          document_type: '',
+          document_date: '',
+          company_name: '',
+          document_name: '',
+          document_number: '',
+          notes: '',
+        });
+        setSelectedFile(null);
+        fetchArchives();
+        fetchStats();
+      } else {
+        toast.error(result.error);
+      }
+    } catch (error) {
+      console.error('Error creating archive:', error);
+      toast.error('Failed to create archive');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  // Handle close create modal
+  const handleCloseCreate = () => {
+    setIsCreateOpen(false);
+    setCreateForm({
+      document_type: '',
+      document_date: '',
+      company_name: '',
+      document_name: '',
+      document_number: '',
+      notes: '',
+    });
+    setSelectedFile(null);
+  };
+
   // DataGrid columns
   const columns = [
     {
@@ -549,6 +664,17 @@ const Archives = () => {
               <ViewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
+          {params.row.file?.path && (
+            <Tooltip title="Download File">
+              <IconButton
+                size="small"
+                onClick={() => archivesService.downloadFile(params.row._id)}
+                color="success"
+              >
+                <DownloadIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title="Delete">
             <IconButton
               size="small"
@@ -577,6 +703,13 @@ const Archives = () => {
             onClick={() => setShowStats(!showStats)}
           >
             {showStats ? 'Hide Stats' : 'Show Stats'}
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setIsCreateOpen(true)}
+          >
+            Add Archive
           </Button>
         </Box>
       </Box>
@@ -1188,6 +1321,132 @@ const Archives = () => {
           <Button onClick={closeDeleteDialog}>Cancel</Button>
           <Button onClick={handleDelete} color="error" variant="contained">
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Create Archive Modal */}
+      <Dialog
+        open={isCreateOpen}
+        onClose={handleCloseCreate}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Add Archive Document</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            {/* Document Type */}
+            <FormControl fullWidth required>
+              <InputLabel>Document Type</InputLabel>
+              <Select
+                value={createForm.document_type}
+                label="Document Type"
+                onChange={(e) => handleCreateFormChange('document_type', e.target.value)}
+              >
+                {UPLOAD_DOC_TYPES.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Document Date */}
+            <TextField
+              label="Document Date"
+              type="date"
+              required
+              fullWidth
+              value={createForm.document_date}
+              onChange={(e) => handleCreateFormChange('document_date', e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              helperText="The original date when the document was created"
+            />
+
+            {/* Company Name */}
+            <TextField
+              label="Company Name"
+              required
+              fullWidth
+              value={createForm.company_name}
+              onChange={(e) => handleCreateFormChange('company_name', e.target.value)}
+              placeholder="e.g., ABC Corporation"
+            />
+
+            {/* Document Name */}
+            <TextField
+              label="Document Name"
+              required
+              fullWidth
+              value={createForm.document_name}
+              onChange={(e) => handleCreateFormChange('document_name', e.target.value)}
+              placeholder="e.g., Invoice March 2024"
+            />
+
+            {/* Document Number */}
+            <TextField
+              label="Document Number"
+              required
+              fullWidth
+              value={createForm.document_number}
+              onChange={(e) => handleCreateFormChange('document_number', e.target.value)}
+              placeholder="e.g., INV-001, PI-2024-05"
+            />
+
+            {/* File Upload */}
+            <Box>
+              <Button
+                component="label"
+                variant="outlined"
+                startIcon={<CloudUploadIcon />}
+                fullWidth
+                sx={{ py: 1.5 }}
+              >
+                {selectedFile ? 'Change File' : 'Upload Document (PDF, Word, Excel)'}
+                <input
+                  type="file"
+                  hidden
+                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  onChange={handleFileSelect}
+                />
+              </Button>
+              {selectedFile && (
+                <Chip
+                  label={selectedFile.name}
+                  onDelete={() => setSelectedFile(null)}
+                  sx={{ mt: 1 }}
+                  color="primary"
+                  variant="outlined"
+                />
+              )}
+              <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 0.5 }}>
+                Max file size: 10MB. Supported: PDF, Word, Excel
+              </Typography>
+            </Box>
+
+            {/* Notes */}
+            <TextField
+              label="Notes (Optional)"
+              fullWidth
+              multiline
+              rows={3}
+              value={createForm.notes}
+              onChange={(e) => handleCreateFormChange('notes', e.target.value)}
+              placeholder="Any additional notes about this document..."
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCreate} disabled={createLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleCreateArchive}
+            disabled={createLoading}
+            startIcon={createLoading ? <CircularProgress size={16} /> : null}
+          >
+            {createLoading ? 'Uploading...' : 'Save Archive'}
           </Button>
         </DialogActions>
       </Dialog>

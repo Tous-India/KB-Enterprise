@@ -9,5 +9,13 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
     allowedHosts: ["frontend", "crm.kbenterprise.org", "localhost"],
+    // Proxy API requests to backend in development
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });

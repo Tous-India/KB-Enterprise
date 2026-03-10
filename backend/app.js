@@ -43,6 +43,11 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ===========================
+// Static Files (for archive uploads)
+// ===========================
+app.use("/uploads", express.static("uploads"));
+
+// ===========================
 // Request Logger (dev only)
 // ===========================
 if (config.isDev) {

@@ -12,6 +12,9 @@ import {
   bulkImport,
   getFiscalYears,
   getBuyers,
+  createWithFile,
+  downloadFile,
+  uploadMiddleware,
 } from "./archives.controller.js";
 
 const router = Router();
@@ -34,12 +37,14 @@ router.get("/search", search);
 router.get("/stats", getStats);
 router.get("/fiscal-years", getFiscalYears);
 router.get("/buyers", getBuyers);
+router.get("/download/:id", downloadFile);
 router.get("/:id", getById);
 
 // ===========================
 // POST routes
 // ===========================
 router.post("/", create);
+router.post("/upload", uploadMiddleware.single("file"), createWithFile);
 router.post("/bulk", bulkImport);
 
 // ===========================

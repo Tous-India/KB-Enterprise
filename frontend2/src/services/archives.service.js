@@ -231,6 +231,39 @@ const archivesService = {
       };
     }
   },
+
+  /**
+   * Create archive with file upload
+   * @param {FormData} formData - Form data with file and metadata
+   * @returns {Promise<{success: boolean, data: Object, error: string}>}
+   */
+  createWithFile: async (formData) => {
+    try {
+      const response = await apiClient.post(ENDPOINTS.ARCHIVES.UPLOAD, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error) {
+      console.error('[Archives Service] Error creating with file:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to upload archive',
+        data: null,
+      };
+    }
+  },
+
+  /**
+   * Download archive file
+   * @param {string} id - Archive ID
+   */
+  downloadFile: (id) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+    window.open(`${baseUrl}${ENDPOINTS.ARCHIVES.DOWNLOAD(id)}`, '_blank');
+  },
 };
 
 export default archivesService;

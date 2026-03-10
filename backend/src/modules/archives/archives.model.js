@@ -57,7 +57,7 @@ const ArchiveSchema = new Schema(
     // Document type
     document_type: {
       type: String,
-      enum: ["INVOICE", "ORDER", "QUOTATION", "PI", "PAYMENT", "OTHER"],
+      enum: ["INVOICE", "ORDER", "QUOTATION", "PI", "PO", "PAYMENT", "OTHER"],
       default: "INVOICE",
       index: true,
     },
@@ -66,6 +66,36 @@ const ArchiveSchema = new Schema(
     original_reference: {
       type: String,
       index: true,
+    },
+
+    // Document name (for manual uploads)
+    document_name: {
+      type: String,
+      index: true,
+    },
+
+    // Document number (for manual uploads)
+    document_number: {
+      type: String,
+      index: true,
+    },
+
+    // Company name (for manual uploads - alternative to buyer_name)
+    company_name: {
+      type: String,
+      index: true,
+    },
+
+    // Uploaded file information
+    file: {
+      filename: String,
+      path: String,
+      mimetype: String,
+      size: Number,
+      uploaded_at: {
+        type: Date,
+        default: Date.now,
+      },
     },
 
     // ===========================
@@ -229,6 +259,9 @@ ArchiveSchema.index({
   buyer_company: "text",
   buyer_email: "text",
   notes: "text",
+  document_name: "text",
+  document_number: "text",
+  company_name: "text",
   "items.part_number": "text",
   "items.product_name": "text",
 });

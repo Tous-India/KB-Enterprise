@@ -293,6 +293,8 @@ export const ENDPOINTS = {
     BULK_IMPORT: '/archives/bulk',
     FISCAL_YEARS: '/archives/fiscal-years',
     BUYERS: '/archives/buyers',
+    UPLOAD: '/archives/upload',
+    DOWNLOAD: (id) => `/archives/download/${id}`,
   },
 };
 
