@@ -604,19 +604,19 @@ const Archives = () => {
       field: 'document_name',
       headerName: 'Document Name',
       width: 200,
-      valueGetter: (params) => params.row.document_name || params.row.original_reference || '-',
+      valueGetter: (params) => params.row?.document_name || params.row?.original_reference || '-',
     },
     {
       field: 'company_name',
       headerName: 'Company',
       width: 180,
-      valueGetter: (params) => params.row.company_name || params.row.buyer_company || params.row.buyer_name || '-',
+      valueGetter: (params) => params.row?.company_name || params.row?.buyer_company || params.row?.buyer_name || '-',
     },
     {
       field: 'document_number',
       headerName: 'Doc Number',
       width: 130,
-      valueGetter: (params) => params.row.document_number || '-',
+      valueGetter: (params) => params.row?.document_number || '-',
     },
     {
       field: 'document_date',
@@ -632,7 +632,7 @@ const Archives = () => {
       headerName: 'File',
       width: 80,
       renderCell: (params) => (
-        params.row.file?.filename ? (
+        params.row?.file?.filename ? (
           <Chip label="PDF" size="small" color="success" variant="outlined" />
         ) : (
           <Chip label="None" size="small" color="default" variant="outlined" />
