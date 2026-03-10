@@ -995,13 +995,29 @@ const Archives = () => {
             <Box sx={{ height: 'calc(95vh - 200px)', minHeight: 500 }}>
               {selectedArchive.file?.path ? (
                 selectedArchive.file.mimetype === 'application/pdf' ? (
-                  <iframe
-                    src={selectedArchive.file.path}
+                  <object
+                    data={selectedArchive.file.path}
+                    type="application/pdf"
                     width="100%"
                     height="100%"
-                    title="PDF Preview"
                     style={{ border: 'none' }}
-                  />
+                  >
+                    <Box sx={{ p: 4, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                      <Typography color="error" variant="h6" sx={{ mb: 2 }}>
+                        PDF file not found or cannot be displayed
+                      </Typography>
+                      <Typography color="textSecondary" sx={{ mb: 3 }}>
+                        The file may have been moved or deleted from the server.
+                      </Typography>
+                      <Button
+                        variant="outlined"
+                        startIcon={<DownloadIcon />}
+                        onClick={() => window.open(selectedArchive.file.path, '_blank')}
+                      >
+                        Try Download Anyway
+                      </Button>
+                    </Box>
+                  </object>
                 ) : (
                   <Box sx={{ p: 4, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                     <Typography variant="h6" sx={{ mb: 2 }}>
