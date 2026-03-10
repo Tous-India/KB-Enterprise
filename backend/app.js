@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import path from "path";
+import fs from "fs";
 
 import config from "./src/config/index.js";
 import routes from "./src/routes.js";
@@ -45,7 +47,11 @@ app.use(express.urlencoded({ extended: true }));
 // ===========================
 // Static Files (for archive uploads)
 // ===========================
-app.use("/uploads", express.static("uploads"));
+const uploadsDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use("/uploads", express.static(uploadsDir));
 
 // ===========================
 // Request Logger (dev only)

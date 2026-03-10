@@ -964,7 +964,7 @@ const Archives = () => {
         />
       </Paper>
 
-      {/* Detail Modal - Invoice Style */}
+      {/* Detail Modal - PDF Preview Only */}
       <Dialog
         open={isDetailModalOpen}
         onClose={closeDetailModal}
@@ -972,360 +972,83 @@ const Archives = () => {
         fullWidth
         PaperProps={{ sx: { maxHeight: '95vh' } }}
       >
-        <DialogContent sx={{ p: 0, bgcolor: '#fff' }}>
-          {selectedArchive && (() => {
-            const hasDeliveryTracking = selectedArchive.items?.some(item => item.qty_ordered !== undefined || item.qty_delivered !== undefined);
-            const isHighSeaSale = selectedArchive.original_data?.invoice_type === 'BILL OF SUPPLY - HIGH SEA SALE';
-            const shipTo = selectedArchive.original_data?.ship_to || {};
-            const hasShipTo = shipTo.name || shipTo.address;
-            const terms = selectedArchive.original_data?.terms || [];
-            const defaultTerms = [
-              "IGST as per applicable",
-              "Freight, Custom Clearance, Duty and CHA charges charged @actual third party invoices",
-              "Freight charges @actual as per freight carrier invoices",
-              "Typo errors are subjected to correction and then considerable",
-              "Bank Charges extra (as per actual)"
-            ];
-            const displayTerms = terms.length > 0 ? terms : defaultTerms;
-
-            return (
-            <Box
-              sx={{
-                p: 4,
-                bgcolor: '#fff',
-                fontFamily: 'Arial, sans-serif',
-                fontSize: '12px',
-                lineHeight: 1.4,
-              }}
-              id="invoice-print-area"
-            >
-              {/* Invoice Header */}
-              <Box sx={{ display: 'flex', alignItems: 'center', borderBottom: '2px solid #000', pb: 2, mb: 2 }}>
-                <Box sx={{
-                  width: 70,
-                  height: 70,
-                  border: '2px solid #000',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 'bold',
-                  fontSize: '20px',
-                  mr: 2
-                }}>
-                  KB
-                </Box>
-                <Box sx={{ flex: 1, textAlign: 'center' }}>
-                  <Typography sx={{ fontSize: '28px', fontWeight: 'bold', letterSpacing: 2 }}>
-                    BILL OF SUPPLY
-                  </Typography>
-                </Box>
+        <DialogTitle sx={{ borderBottom: '1px solid #e0e0e0', pb: 2 }}>
+          {selectedArchive && (
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                {selectedArchive.document_name || selectedArchive.original_reference || 'Archive Document'}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
+                <Chip label={selectedArchive.document_type} size="small" color="primary" />
+                <Typography variant="body2" color="textSecondary">
+                  {selectedArchive.company_name || selectedArchive.buyer_company}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {selectedArchive.document_number}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {selectedArchive.document_date ? new Date(selectedArchive.document_date).toLocaleDateString() : ''}
+                </Typography>
               </Box>
-
-              {/* High Sea Sale Banner - only show if applicable */}
-              {isHighSeaSale && (
-                <Box sx={{ textAlign: 'center', borderBottom: '1px solid #000', py: 0.5, mb: 2 }}>
-                  <Typography sx={{ fontWeight: 'bold', textDecoration: 'underline', fontSize: '14px' }}>
-                    HIGH SEA SALE
-                  </Typography>
-                </Box>
+              {selectedArchive.notes && (
+                <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                  Notes: {selectedArchive.notes}
+                </Typography>
               )}
-
-              {/* From / Bill To / Ship To Section */}
-              <Box sx={{ display: 'flex', border: '1px solid #000', mb: 2 }}>
-                <Box sx={{ flex: 1, borderRight: '1px solid #000', p: 1.5 }}>
-                  <Typography sx={{ fontWeight: 'bold', textDecoration: 'underline', mb: 0.5, fontSize: '11px' }}>FROM:-</Typography>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '12px' }}>
-                    {selectedArchive.original_data?.seller?.name || 'KB ENTERPRISES'}
-                  </Typography>
-                  <Typography sx={{ fontSize: '10px' }}>
-                    {selectedArchive.original_data?.seller?.address || 'PLOT NO 145 GF POCKET 25 SECTOR 24 ROHINI EAST DELHI 110085'}
-                  </Typography>
-                  <Typography sx={{ fontSize: '10px' }}>GSTIN – {selectedArchive.original_data?.seller?.gstin || '07CARPR7906M1ZR'}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>ATTN.:- {selectedArchive.original_data?.seller?.contact_person || 'MR. NITIN'}, {selectedArchive.original_data?.seller?.phone || '9315151910'}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>EMAIL:- {selectedArchive.original_data?.seller?.email || 'INFO@KBENTERPRISE.ORG'}</Typography>
-                  {selectedArchive.original_data?.hss_number && (
-                    <Typography sx={{ fontSize: '10px', bgcolor: '#ffff00', mt: 0.5, p: 0.3 }}>
-                      <strong>HSS:-</strong> {selectedArchive.original_data.hss_number}
+            </Box>
+          )}
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, bgcolor: '#f5f5f5' }}>
+          {selectedArchive && (
+            <Box sx={{ height: 'calc(95vh - 200px)', minHeight: 500 }}>
+              {selectedArchive.file?.path ? (
+                selectedArchive.file.mimetype === 'application/pdf' ? (
+                  <iframe
+                    src={selectedArchive.file.path}
+                    width="100%"
+                    height="100%"
+                    title="PDF Preview"
+                    style={{ border: 'none' }}
+                  />
+                ) : (
+                  <Box sx={{ p: 4, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                      {selectedArchive.file.filename}
                     </Typography>
-                  )}
-                </Box>
-                <Box sx={{ flex: 1, borderRight: '1px solid #000', p: 1.5 }}>
-                  <Typography sx={{ fontWeight: 'bold', textDecoration: 'underline', mb: 0.5, fontSize: '11px' }}>BILL TO:-</Typography>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '12px' }}>{selectedArchive.buyer_company}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>{selectedArchive.original_data?.buyer?.address || ''}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>GSTIN- {selectedArchive.original_data?.buyer?.gstin || ''}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>ATTN.:- {selectedArchive.buyer_name}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>CONTACT:- {selectedArchive.original_data?.buyer?.phone || ''}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>EMAIL:- {selectedArchive.buyer_email}</Typography>
-                  {selectedArchive.original_data?.awb_number && (
-                    <Typography sx={{ fontSize: '10px', bgcolor: '#ffff00', mt: 0.5, p: 0.3 }}>
-                      <strong>AWB NO:-</strong> {selectedArchive.original_data.awb_number}
+                    <Typography color="textSecondary" sx={{ mb: 3 }}>
+                      This file type ({selectedArchive.file.mimetype}) cannot be previewed in browser.
                     </Typography>
-                  )}
-                </Box>
-                <Box sx={{ flex: 1, p: 1.5 }}>
-                  <Typography sx={{ fontWeight: 'bold', textDecoration: 'underline', mb: 0.5, fontSize: '11px' }}>SHIP TO:-</Typography>
-                  {hasShipTo ? (
-                    <>
-                      <Typography sx={{ fontWeight: 'bold', fontSize: '12px' }}>{shipTo.name}</Typography>
-                      <Typography sx={{ fontSize: '10px' }}>{shipTo.address}</Typography>
-                      <Typography sx={{ fontSize: '10px' }}>GSTIN- {shipTo.gstin || ''}</Typography>
-                      <Typography sx={{ fontSize: '10px' }}>ATTN.:- {shipTo.contact_person || ''}</Typography>
-                      <Typography sx={{ fontSize: '10px' }}>CONTACT:- {shipTo.phone || ''}</Typography>
-                      <Typography sx={{ fontSize: '10px' }}>EMAIL:- {shipTo.email || ''}</Typography>
-                    </>
-                  ) : null}
-                  {selectedArchive.original_data?.usd_rate_consideration && (
-                    <Typography sx={{ fontSize: '10px', bgcolor: '#ffff00', mt: 0.5, p: 0.3 }}>
-                      <strong>USD RATE CONSIDERATION</strong> {selectedArchive.original_data.usd_rate_consideration}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-
-              {/* Invoice Details Row */}
-              <Box sx={{ display: 'flex', border: '1px solid #000', mb: 2, fontSize: '10px' }}>
-                <Box sx={{ width: '10%', borderRight: '1px solid #000', p: 0.6, bgcolor: '#f5f5f5' }}>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>QuoteRef.:-</Typography>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>Dated:-</Typography>
-                </Box>
-                <Box sx={{ width: '12%', borderRight: '1px solid #000', p: 0.6 }}>
-                  <Typography sx={{ fontSize: '10px' }}>{selectedArchive.original_data?.quote_ref || 'BYMAIL'}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>{selectedArchive.original_data?.quote_date || ''}</Typography>
-                </Box>
-                <Box sx={{ width: '10%', borderRight: '1px solid #000', p: 0.6, bgcolor: '#f5f5f5' }}>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>Invoice No:-</Typography>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>Dated:-</Typography>
-                </Box>
-                <Box sx={{ width: '15%', borderRight: '1px solid #000', p: 0.6, bgcolor: '#ffff00' }}>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '11px' }}>{selectedArchive.original_reference}</Typography>
-                  <Typography sx={{ fontSize: '10px' }}>
-                    {selectedArchive.document_date ? new Date(selectedArchive.document_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) : ''}
-                  </Typography>
-                </Box>
-                <Box sx={{ width: '10%', borderRight: '1px solid #000', p: 0.6, bgcolor: '#f5f5f5' }}>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>Shipping:-</Typography>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>Payment:-</Typography>
-                </Box>
-                <Box sx={{ flex: 1, p: 0.6, bgcolor: '#ffff00' }}>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>{selectedArchive.original_data?.shipping_method || ''}</Typography>
-                  <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>{selectedArchive.original_data?.payment_terms || '100%PREPAID'}</Typography>
-                </Box>
-              </Box>
-
-              {/* Items Table */}
-              <TableContainer sx={{ border: '1px solid #000', mb: 2 }}>
-                <Table size="small" sx={{ '& td, & th': { fontSize: '9px', py: 0.2, px: 0.4 } }}>
-                  <TableHead>
-                    <TableRow sx={{ bgcolor: '#ffff00' }}>
-                      <TableCell sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '3%' }}>S/n.</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: hasDeliveryTracking ? '16%' : '22%' }}>Item Description</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '14%' }}>Part Number</TableCell>
-                      {hasDeliveryTracking ? (
-                        <>
-                          <TableCell align="center" sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '6%' }}>Qty. Order</TableCell>
-                          <TableCell align="center" sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '6%' }}>Qty delivered</TableCell>
-                          <TableCell align="center" sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '5%' }}>Pending</TableCell>
-                        </>
-                      ) : (
-                        <TableCell align="center" sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '6%' }}>Qty.</TableCell>
-                      )}
-                      <TableCell align="center" sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '4%' }}>UOM</TableCell>
-                      <TableCell align="center" sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '8%' }}>STATUS</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold', borderRight: '1px solid #ccc', width: '10%' }}>UNIT PRICE INR</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold', width: '12%' }}>TOTAL PRICE INR</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {selectedArchive.items?.map((item, index) => {
-                      const isPending = (item.pending > 0) || item.status === 'Pending' || item.description?.includes('PENDING');
-                      return (
-                        <TableRow key={index} sx={{ '&:nth-of-type(even)': { bgcolor: '#fafafa' } }}>
-                          <TableCell sx={{ borderRight: '1px solid #eee' }}>{item.sn || index + 1}</TableCell>
-                          <TableCell sx={{ borderRight: '1px solid #eee' }}>{item.product_name}</TableCell>
-                          <TableCell sx={{ borderRight: '1px solid #eee' }}>{item.part_number}</TableCell>
-                          {hasDeliveryTracking ? (
-                            <>
-                              <TableCell align="center" sx={{ borderRight: '1px solid #eee' }}>{item.qty_ordered ?? item.quantity}</TableCell>
-                              <TableCell align="center" sx={{ borderRight: '1px solid #eee' }}>{item.qty_delivered ?? ''}</TableCell>
-                              <TableCell align="center" sx={{ borderRight: '1px solid #eee' }}>{item.pending ?? ''}</TableCell>
-                            </>
-                          ) : (
-                            <TableCell align="center" sx={{ borderRight: '1px solid #eee' }}>{item.quantity}</TableCell>
-                          )}
-                          <TableCell align="center" sx={{ borderRight: '1px solid #eee' }}>{item.uom || 'EA'}</TableCell>
-                          <TableCell align="center" sx={{ borderRight: '1px solid #eee', color: isPending ? '#ed6c02' : '#2e7d32' }}>
-                            {isPending ? 'Pending' : 'Delivered'}
-                          </TableCell>
-                          <TableCell align="right" sx={{ borderRight: '1px solid #eee' }}>{item.unit_price?.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                          <TableCell align="right">{item.total_price?.toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {hasDeliveryTracking && (
-                      <TableRow sx={{ bgcolor: '#f0f0f0', fontWeight: 'bold' }}>
-                        <TableCell colSpan={3} align="right" sx={{ fontWeight: 'bold' }}>TOTAL</TableCell>
-                        <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                          {selectedArchive.original_data?.total_qty_ordered || selectedArchive.items?.reduce((sum, item) => sum + (item.qty_ordered || item.quantity || 0), 0)}
-                        </TableCell>
-                        <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                          {selectedArchive.original_data?.total_qty_delivered || selectedArchive.items?.reduce((sum, item) => sum + (item.qty_delivered || 0), 0)}
-                        </TableCell>
-                        <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                          {selectedArchive.original_data?.total_qty_pending || selectedArchive.items?.reduce((sum, item) => sum + (item.pending || 0), 0)}
-                        </TableCell>
-                        <TableCell colSpan={4}></TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              {/* Total and Tax Section */}
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                <Box sx={{ flex: 1 }}>
-                  {!hasDeliveryTracking && (
-                    <Box sx={{ border: '1px solid #000', p: 1, display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography sx={{ fontWeight: 'bold', fontSize: '12px' }}>TOTAL QTY:</Typography>
-                      <Typography sx={{ fontWeight: 'bold', fontSize: '12px' }}>
-                        {selectedArchive.original_data?.total_qty || selectedArchive.items?.reduce((sum, item) => sum + (item.quantity || 0), 0)}
-                      </Typography>
-                    </Box>
-                  )}
-                  <Box sx={{ border: '1px solid #000', borderTop: hasDeliveryTracking ? '1px solid #000' : 0, p: 1 }}>
-                    <Typography sx={{ fontWeight: 'bold', fontSize: '10px' }}>AMOUNT IN INR</Typography>
-                    <Typography sx={{ fontSize: '10px', mt: 0.5 }}>
-                      {numberToWords(selectedArchive.total_amount || 0)}
-                    </Typography>
-                  </Box>
-                  {/* Terms Section */}
-                  <Box sx={{ mt: 1 }}>
-                    <Typography sx={{ fontWeight: 'bold', textDecoration: 'underline', mb: 0.5, fontSize: '10px' }}>QuotTerms:-</Typography>
-                    {displayTerms.map((term, i) => (
-                      <Typography key={i} sx={{ fontSize: '9px' }}>{i + 1}. {term}</Typography>
-                    ))}
-                  </Box>
-                </Box>
-                <Box sx={{ width: '40%' }}>
-                  <Table size="small" sx={{ border: '1px solid #000', '& td': { fontSize: '10px', py: 0.3, px: 1, borderBottom: '1px solid #000' } }}>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell colSpan={2} sx={{ fontWeight: 'bold' }} align="right">TOTAL</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{(selectedArchive.total_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell colSpan={2} sx={{ fontWeight: 'bold' }}>IGST@5%:-</TableCell>
-                        <TableCell align="right">{(selectedArchive.original_data?.tax_breakdown?.['IGST @ 5%'] || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell colSpan={2} sx={{ fontWeight: 'bold' }}>IGST@18%:-</TableCell>
-                        <TableCell align="right">{(selectedArchive.original_data?.tax_breakdown?.['IGST @ 18%'] || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell colSpan={2} sx={{ fontWeight: 'bold' }}>IGST@28%:-</TableCell>
-                        <TableCell align="right">{(selectedArchive.original_data?.tax_breakdown?.['IGST @ 28%'] || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell colSpan={2} sx={{ fontWeight: 'bold' }}>Freight:-</TableCell>
-                        <TableCell align="right">{(selectedArchive.original_data?.tax_breakdown?.['Freight'] || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell colSpan={2} sx={{ fontWeight: 'bold' }}>Round Off:-</TableCell>
-                        <TableCell align="right"></TableCell>
-                      </TableRow>
-                      <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                        <TableCell colSpan={2} sx={{ fontWeight: 'bold' }}>GrandTotal:-</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '11px' }}>{(selectedArchive.total_amount || 0).toLocaleString('en-IN', {minimumFractionDigits: 2})}</TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                  {/* Signature Box */}
-                  <Box sx={{ border: '1px solid #000', p: 2, textAlign: 'center', mt: 1 }}>
-                    <Typography sx={{ fontSize: '10px' }}>For KB ENTERPRISES</Typography>
-                    <Typography sx={{ mt: 4, fontWeight: 'bold', fontSize: '10px' }}>AUTH. SIGNATORY</Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              {/* Footer - Bank Details */}
-              <Box sx={{ mt: 2 }}>
-                <Table size="small" sx={{ border: '1px solid #000', width: 'auto', '& td': { fontSize: '10px', py: 0.3, px: 1, border: '1px solid #000' } }}>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Bank</TableCell>
-                      <TableCell>{selectedArchive.original_data?.bank_details?.bank || 'ICICI bank ltd'}</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Branch</TableCell>
-                      <TableCell>{selectedArchive.original_data?.bank_details?.branch || 'Sec 11 Rohini'}</TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 'bold' }}>Acc no</TableCell>
-                      <TableCell>{selectedArchive.original_data?.bank_details?.account_no || '036705501190'}</TableCell>
-                      <TableCell sx={{ fontWeight: 'bold' }}>IFSC</TableCell>
-                      <TableCell>{selectedArchive.original_data?.bank_details?.ifsc || 'ICIC0000367'}</TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </Box>
-
-              {/* Uploaded File Preview */}
-              {selectedArchive.file?.path && (
-                <Box sx={{ mt: 3, borderTop: '2px solid #000', pt: 2 }}>
-                  <Typography sx={{ fontWeight: 'bold', mb: 1, fontSize: '14px' }}>
-                    Uploaded Document: {selectedArchive.file.filename}
-                  </Typography>
-                  {selectedArchive.file.mimetype === 'application/pdf' ? (
-                    <Box sx={{ height: 500, border: '1px solid #ddd', borderRadius: 1 }}>
-                      <iframe
-                        src={selectedArchive.file.path}
-                        width="100%"
-                        height="100%"
-                        title="PDF Preview"
-                        style={{ border: 'none' }}
-                      />
-                    </Box>
-                  ) : (
                     <Button
                       variant="contained"
+                      size="large"
                       startIcon={<DownloadIcon />}
                       onClick={() => window.open(selectedArchive.file.path, '_blank')}
                     >
-                      Download {selectedArchive.file.filename}
+                      Download File
                     </Button>
-                  )}
+                  </Box>
+                )
+              ) : (
+                <Box sx={{ p: 4, textAlign: 'center', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <Typography color="error" variant="h6">
+                    No file uploaded for this archive
+                  </Typography>
                 </Box>
               )}
             </Box>
-          );
-          })()}
+          )}
         </DialogContent>
         <DialogActions sx={{ borderTop: '1px solid #e0e0e0', p: 2, justifyContent: 'space-between' }}>
           <Button onClick={closeDetailModal} color="inherit">Close</Button>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button
-              variant="outlined"
-              startIcon={<PrintIcon />}
-              onClick={() => handlePrint(selectedArchive)}
-            >
-              Print
-            </Button>
+          {selectedArchive?.file?.path && (
             <Button
               variant="contained"
               startIcon={<DownloadIcon />}
-              onClick={() => {
-                const element = document.getElementById('invoice-print-area');
-                const opt = {
-                  margin: [10, 10, 10, 10],
-                  filename: `${selectedArchive.original_reference || selectedArchive.archive_id}.pdf`,
-                  image: { type: 'jpeg', quality: 0.98 },
-                  html2canvas: { scale: 2, useCORS: true },
-                  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-                html2pdf().set(opt).from(element).save();
-              }}
+              onClick={() => window.open(selectedArchive.file.path, '_blank')}
             >
-              Download PDF
+              Download File
             </Button>
-          </Box>
+          )}
         </DialogActions>
       </Dialog>
 
