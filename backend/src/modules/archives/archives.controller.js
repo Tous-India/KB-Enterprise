@@ -457,7 +457,7 @@ export const update = catchAsync(async (req, res) => {
 // ===========================
 // DELETE /api/archives/:id
 // ===========================
-// Admin only — delete archive
+// Admin only — delete archive and associated file
 export const remove = catchAsync(async (req, res) => {
   const { id } = req.params;
 
@@ -469,6 +469,19 @@ export const remove = catchAsync(async (req, res) => {
 
   if (!archive) {
     throw new AppError("Archive not found", 404);
+  }
+
+  // Delete the associated file if it exists
+  if (archive.file?.path) {
+    const filePath = path.join(process.cwd(), archive.file.path);
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (err) {
+        console.error("Error deleting file:", err);
+        // Continue with archive deletion even if file deletion fails
+      }
+    }
   }
 
   await Archive.deleteOne({ _id: archive._id });
