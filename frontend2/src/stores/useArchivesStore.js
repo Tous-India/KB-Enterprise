@@ -162,7 +162,7 @@ const useArchivesStore = create((set, get) => ({
     if (filters.payment_status) params.payment_status = filters.payment_status;
     if (filters.min_amount) params.min_amount = filters.min_amount;
     if (filters.max_amount) params.max_amount = filters.max_amount;
-    if (filters.search) params.search = filters.search;
+    // Note: search is handled client-side for better column coverage
     if (filters.tags) params.tags = filters.tags;
 
     return params;

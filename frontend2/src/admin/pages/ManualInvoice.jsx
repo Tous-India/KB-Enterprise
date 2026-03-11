@@ -1197,7 +1197,7 @@ function ManualInvoice() {
                       Select Customer
                     </Typography>
                     <Autocomplete
-                      options={users}
+                      options={Array.isArray(users) ? users : []}
                       getOptionLabel={(option) => `${option.name} (${option.user_id || option.customer_id || ""})`}
                       value={selectedCustomer}
                       onChange={(_, newValue) => setSelectedCustomer(newValue)}
@@ -2325,7 +2325,7 @@ function ManualInvoice() {
         </DialogTitle>
         <DialogContent dividers>
           <Autocomplete
-            options={products}
+            options={Array.isArray(products) ? products : []}
             getOptionLabel={(option) => `${option.product_name} (${option.part_number})`}
             value={searchProduct}
             onChange={(_, newValue) => setSearchProduct(newValue)}

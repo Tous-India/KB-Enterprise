@@ -407,6 +407,30 @@ const Archives = () => {
     }
   }, [getQueryParams]);
 
+  // Client-side filtering across all columns
+  const filteredArchives = Array.isArray(archives) ? archives.filter((archive) => {
+    const searchTerm = (filters.search || '').toLowerCase().trim();
+    if (!searchTerm) return true;
+
+    // Search across all visible columns
+    const searchableFields = [
+      archive.archive_id,
+      archive.document_type,
+      archive.document_name,
+      archive.original_reference,
+      archive.company_name,
+      archive.buyer_company,
+      archive.buyer_name,
+      archive.document_number,
+      archive.notes,
+      archive.file?.filename,
+    ];
+
+    return searchableFields.some((field) =>
+      field && String(field).toLowerCase().includes(searchTerm)
+    );
+  }) : [];
+
   // Fetch stats
   const fetchStats = useCallback(async () => {
     try {
@@ -793,7 +817,7 @@ const Archives = () => {
           fullWidth
           size="small"
           label="Search"
-          placeholder="Search by reference, buyer name, part number, items..."
+          placeholder="Search by Archive ID, Type, Document Name, Company, Doc Number..."
           value={filters.search}
           onChange={(e) => setFilter('search', e.target.value)}
           onKeyDown={(e) => {
@@ -943,7 +967,7 @@ const Archives = () => {
       {/* Data Table */}
       <Paper className="p-4">
         <DataGrid
-          rows={Array.isArray(archives) ? archives : []}
+          rows={filteredArchives}
           columns={columns}
           pageSize={20}
           rowsPerPageOptions={[20, 50, 100]}

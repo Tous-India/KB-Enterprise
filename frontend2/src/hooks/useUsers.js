@@ -68,8 +68,8 @@ export const useBuyers = () => {
       if (!result.success) {
         throw new Error(result.error);
       }
-      // Handle both { users: [...] } and direct array response
-      return result.data?.users || result.data || [];
+      // Handle { buyers: [...] }, { users: [...] }, or direct array response
+      return result.data?.buyers || result.data?.users || (Array.isArray(result.data) ? result.data : []);
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
