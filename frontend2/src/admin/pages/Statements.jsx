@@ -99,10 +99,16 @@ function Statements() {
   // Extract transactions from API response
   const allTransactions = transactionsData?.data?.transactions || []
 
-  // Get unique buyers from transactions
-  const uniqueBuyers = [...new Set(allTransactions.map(txn =>
-    txn.buyer?.user_id || txn.buyer?.name || 'Unknown'
-  ))].filter(Boolean).sort()
+  // Get unique buyers from transactions (for filter dropdown)
+  const uniqueBuyersMap = new Map()
+  allTransactions.forEach(txn => {
+    const id = txn.buyer?.user_id || txn.buyer?.name || 'Unknown'
+    const name = txn.buyer?.name || txn.buyer?.company_name || txn.buyer?.user_id || 'Unknown'
+    if (id && !uniqueBuyersMap.has(id)) {
+      uniqueBuyersMap.set(id, name)
+    }
+  })
+  const uniqueBuyers = Array.from(uniqueBuyersMap.entries()).sort((a, b) => a[1].localeCompare(b[1]))
 
   // Get unique months from transactions
   const getMonthOptions = () => {
@@ -124,7 +130,10 @@ function Statements() {
     return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
   }
 
-  // Helper to get buyer identifier
+  // Helper to get buyer display name (prefer name over user_id)
+  const getBuyerName = (txn) => txn.buyer?.name || txn.buyer?.company_name || txn.buyer?.user_id || 'Unknown'
+
+  // Helper to get buyer identifier for filtering
   const getBuyerId = (txn) => txn.buyer?.user_id || txn.buyer?.name || 'Unknown'
 
   // Filter transactions
@@ -469,8 +478,8 @@ function Statements() {
                   sx={{ '& .MuiSelect-select': { fontSize: '13px' } }}
                 >
                   <MenuItem value="all" sx={{ fontSize: '13px' }}>All Buyers</MenuItem>
-                  {uniqueBuyers.map(buyer => (
-                    <MenuItem key={buyer} value={buyer} sx={{ fontSize: '13px' }}>{buyer}</MenuItem>
+                  {uniqueBuyers.map(([id, name]) => (
+                    <MenuItem key={id} value={id} sx={{ fontSize: '13px' }}>{name}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -577,7 +586,7 @@ function Statements() {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '13px' }}>
-                        {getBuyerId(txn)}
+                        {getBuyerName(txn)}
                       </Typography>
                     </TableCell>
                     <TableCell>

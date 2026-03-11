@@ -153,52 +153,76 @@ export const getByCustomer = catchAsync(async (req, res) => {
 // ===========================
 // GET /api/statements/transactions
 // ===========================
-// Admin only — aggregate all invoices + payments as transactions
+// Admin only — aggregate all invoices + verified payment records as transactions
 export const getTransactions = catchAsync(async (req, res) => {
-  const { page = 1, limit = 50 } = req.query;
+  const { page = 1, limit = 100 } = req.query;
 
-  // Get recent invoices and payments as transaction entries
-  const [invoices, payments] = await Promise.all([
+  // Get invoices and verified payment records as transaction entries
+  const [invoices, paymentRecords] = await Promise.all([
     Invoice.find()
-      .populate("buyer", "name user_id")
+      .populate("buyer", "name user_id company_name")
       .sort({ createdAt: -1 })
       .limit(Number(limit))
       .select("invoice_number buyer buyer_name total_amount createdAt"),
-    Payment.find({ status: "COMPLETED" })
-      .populate("buyer", "name user_id")
-      .sort({ createdAt: -1 })
+    PaymentRecord.find({ status: "VERIFIED" })
+      .populate("buyer", "name user_id company_name")
+      .populate("proforma_invoice", "proforma_number")
+      .sort({ payment_date: -1 })
       .limit(Number(limit))
-      .select("payment_id buyer buyer_name amount payment_date"),
+      .select("proforma_number buyer buyer_name amount recorded_amount payment_date payment_method transaction_id"),
   ]);
 
   const transactions = [];
 
+  // Add invoices as charges (money owed by buyer)
   invoices.forEach((inv) => {
     transactions.push({
       date: inv.createdAt,
       type: "INVOICE",
       reference: inv.invoice_number,
       description: `Invoice ${inv.invoice_number}`,
-      buyer: inv.buyer,
-      charges: inv.total_amount,
+      buyer: {
+        _id: inv.buyer?._id,
+        name: inv.buyer?.name || inv.buyer_name || "Unknown",
+        user_id: inv.buyer?.user_id,
+        company_name: inv.buyer?.company_name,
+      },
+      charges: inv.total_amount || 0,
       payments: 0,
     });
   });
 
-  payments.forEach((pay) => {
+  // Add verified payment records as payments (money received)
+  paymentRecords.forEach((pay) => {
+    const amount = pay.recorded_amount || pay.amount || 0;
     transactions.push({
       date: pay.payment_date,
       type: "PAYMENT",
-      reference: pay.payment_id,
-      description: `Payment ${pay.payment_id}`,
-      buyer: pay.buyer,
+      reference: pay.proforma_number || pay.proforma_invoice?.proforma_number || "-",
+      description: pay.transaction_id ? `Payment - ${pay.transaction_id}` : `Payment received`,
+      buyer: {
+        _id: pay.buyer?._id,
+        name: pay.buyer?.name || pay.buyer_name || "Unknown",
+        user_id: pay.buyer?.user_id,
+        company_name: pay.buyer?.company_name,
+      },
       charges: 0,
-      payments: pay.amount,
+      payments: amount,
     });
   });
 
-  // Sort by date descending
-  transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+  // Sort by date (oldest first for balance calculation)
+  transactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  // Calculate running balance
+  let runningBalance = 0;
+  transactions.forEach((txn) => {
+    runningBalance += (txn.charges || 0) - (txn.payments || 0);
+    txn.balance = runningBalance;
+  });
+
+  // Reverse to show newest first
+  transactions.reverse();
 
   return ApiResponse.success(res, { transactions }, "Transactions fetched");
 });
