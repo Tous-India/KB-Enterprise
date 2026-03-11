@@ -391,7 +391,9 @@ const Archives = () => {
       const result = await archivesService.getAll(params);
 
       if (result.success) {
-        setArchives(result.data.archives || []);
+        // Ensure we always get an array
+        const archivesData = result.data?.archives;
+        setArchives(Array.isArray(archivesData) ? archivesData : []);
       } else {
         toast.error(result.error);
         setArchives([]);
@@ -399,6 +401,7 @@ const Archives = () => {
     } catch (error) {
       console.error('Error fetching archives:', error);
       toast.error('Failed to fetch archives');
+      setArchives([]);
     } finally {
       setLoading(false);
     }
@@ -940,7 +943,7 @@ const Archives = () => {
       {/* Data Table */}
       <Paper className="p-4">
         <DataGrid
-          rows={archives}
+          rows={Array.isArray(archives) ? archives : []}
           columns={columns}
           pageSize={20}
           rowsPerPageOptions={[20, 50, 100]}
