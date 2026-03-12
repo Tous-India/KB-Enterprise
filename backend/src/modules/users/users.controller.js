@@ -226,6 +226,10 @@ export const create = catchAsync(async (req, res) => {
     company_details,
     role: userRole,
     permissions: userRole === ROLES.SUB_ADMIN ? (permissions || []) : [],
+    // Admin-created users are automatically verified and approved
+    email_verified: true,
+    is_active: true,
+    approval_status: "APPROVED",
   });
 
   // Remove password from response
@@ -267,6 +271,10 @@ export const createSubAdmin = catchAsync(async (req, res) => {
     phone,
     role: ROLES.SUB_ADMIN,
     permissions: permissions || [],
+    // Admin-created users are automatically verified and approved
+    email_verified: true,
+    is_active: true,
+    approval_status: "APPROVED",
   });
 
   const userObj = user.toObject();
