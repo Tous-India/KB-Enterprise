@@ -194,7 +194,7 @@ export const changePassword = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — create a user account (BUYER or SUB_ADMIN)
 export const create = catchAsync(async (req, res) => {
-  const { name, email, password, phone, address, company_details, role } = req.body;
+  const { name, email, password, phone, address, company_details, role, permissions } = req.body;
 
   if (!name || !email || !password) {
     throw new AppError("Name, email and password are required", 400);
@@ -209,6 +209,14 @@ export const create = catchAsync(async (req, res) => {
     throw new AppError("Email already exists", 400);
   }
 
+  // Validate permissions if SUB_ADMIN
+  if (userRole === ROLES.SUB_ADMIN && permissions && Array.isArray(permissions)) {
+    const invalid = permissions.filter((p) => !ALL_PERMISSIONS.includes(p));
+    if (invalid.length > 0) {
+      throw new AppError(`Invalid permissions: ${invalid.join(", ")}`, 400);
+    }
+  }
+
   const user = await User.create({
     name,
     email,
@@ -217,6 +225,7 @@ export const create = catchAsync(async (req, res) => {
     address,
     company_details,
     role: userRole,
+    permissions: userRole === ROLES.SUB_ADMIN ? (permissions || []) : [],
   });
 
   // Remove password from response

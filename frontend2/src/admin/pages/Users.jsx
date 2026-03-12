@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -32,6 +32,8 @@ import {
   Tab,
   CircularProgress,
   LinearProgress,
+  Checkbox,
+  ListItemText,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import {
@@ -63,6 +65,7 @@ import {
   Refresh,
 } from "@mui/icons-material";
 import { useCurrency } from "../../context/CurrencyContext";
+import { useAuth } from "../../context/AuthContext";
 import InvoicePrintPreview from "../components/InvoicePrintPreview";
 import StatementPrintPreview from "../components/StatementPrintPreview";
 import { useUsers, useCreateUser, useUpdateUser, useDeleteUser, useActivateUser, useDeactivateUser } from "../../hooks/useUsers";
@@ -79,6 +82,7 @@ function TabPanel({ children, value, index }) {
 }
 
 function Users() {
+  const { user: currentUser } = useAuth();
   const { usdToInr } = useCurrency();
   const invoicePrintRef = useRef(null);
   const statementPrintRef = useRef(null);
@@ -146,6 +150,30 @@ function Users() {
 
   // Password visibility toggle
   const [showPassword, setShowPassword] = useState(false);
+
+  // Permissions state for Sub Admin
+  const [selectedPermissions, setSelectedPermissions] = useState([]);
+
+  // Reset permissions when modal closes or role changes from SUB_ADMIN
+  useEffect(() => {
+    if (!isAddModalOpen) {
+      setSelectedPermissions([]);
+    }
+  }, [isAddModalOpen]);
+
+  // Available permissions for Sub Admin
+  const AVAILABLE_PERMISSIONS = [
+    { value: 'manage_users', label: 'Manage Users' },
+    { value: 'manage_orders', label: 'Manage Orders' },
+    { value: 'manage_products', label: 'Manage Products' },
+    { value: 'view_analytics', label: 'View Analytics' },
+    { value: 'manage_quotes', label: 'Manage Quotes' },
+    { value: 'manage_payments', label: 'Manage Payments' },
+    { value: 'manage_invoices', label: 'Manage Invoices' },
+    { value: 'manage_dispatch', label: 'Manage Dispatch' },
+    { value: 'manage_suppliers', label: 'Manage Suppliers' },
+    { value: 'manage_allocations', label: 'Manage Allocations' },
+  ];
 
   // Get computed values from store
   const sortedUsers = getSortedUsers(users);
@@ -243,9 +271,15 @@ function Users() {
       company_details: userForm.company_details,
     };
 
+    // Add permissions if creating Sub Admin
+    if (userForm.role === 'SUB_ADMIN') {
+      userData.permissions = selectedPermissions;
+    }
+
     createUserMutation.mutate(userData, {
       onSuccess: () => {
         closeAddModal();
+        setSelectedPermissions([]);
       },
     });
   };
@@ -1354,13 +1388,56 @@ function Users() {
                 <Select
                   value={userForm.role}
                   label="Role"
-                  onChange={(e) => updateUserForm("role", e.target.value)}
+                  onChange={(e) => {
+                    updateUserForm("role", e.target.value);
+                    if (e.target.value !== 'SUB_ADMIN') {
+                      setSelectedPermissions([]);
+                    }
+                  }}
                 >
                   <MenuItem value="BUYER">Buyer</MenuItem>
-                  <MenuItem value="SUB_ADMIN">Sub Admin</MenuItem>
+                  {currentUser?.role === 'SUPER_ADMIN' && (
+                    <MenuItem value="SUB_ADMIN">Sub Admin</MenuItem>
+                  )}
                 </Select>
               </FormControl>
             </Grid>
+
+            {/* Permissions Selector - Only show for SUB_ADMIN */}
+            {userForm.role === 'SUB_ADMIN' && (
+              <Grid size={{ xs: 12 }}>
+                <FormControl fullWidth>
+                  <InputLabel>Permissions</InputLabel>
+                  <Select
+                    multiple
+                    value={selectedPermissions}
+                    label="Permissions"
+                    onChange={(e) => setSelectedPermissions(e.target.value)}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((value) => (
+                          <Chip
+                            key={value}
+                            label={AVAILABLE_PERMISSIONS.find(p => p.value === value)?.label || value}
+                            size="small"
+                          />
+                        ))}
+                      </Box>
+                    )}
+                  >
+                    {AVAILABLE_PERMISSIONS.map((permission) => (
+                      <MenuItem key={permission.value} value={permission.value}>
+                        <Checkbox checked={selectedPermissions.indexOf(permission.value) > -1} />
+                        <ListItemText primary={permission.label} />
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                  Select permissions for this Sub Admin user
+                </Typography>
+              </Grid>
+            )}
 
             <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 1 }}>
