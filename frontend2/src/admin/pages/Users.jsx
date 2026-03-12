@@ -154,12 +154,26 @@ function Users() {
   // Permissions state for Sub Admin
   const [selectedPermissions, setSelectedPermissions] = useState([]);
 
-  // Reset permissions when modal closes or role changes from SUB_ADMIN
+  // Email verification state for Add User
+  const [emailVerified, setEmailVerified] = useState(false);
+
+  // Email verification state for Edit User
+  const [editEmailVerified, setEditEmailVerified] = useState(false);
+
+  // Reset permissions and email verification when add modal closes
   useEffect(() => {
     if (!isAddModalOpen) {
       setSelectedPermissions([]);
+      setEmailVerified(false);
     }
   }, [isAddModalOpen]);
+
+  // Initialize email verification status when editing user
+  useEffect(() => {
+    if (isEditModalOpen && selectedUser) {
+      setEditEmailVerified(selectedUser.email_verified === true);
+    }
+  }, [isEditModalOpen, selectedUser]);
 
   // Available permissions for Sub Admin
   const AVAILABLE_PERMISSIONS = [
@@ -269,6 +283,7 @@ function Users() {
       role: userForm.role,
       address: userForm.address,
       company_details: userForm.company_details,
+      email_verified: emailVerified, // Include email verification status
     };
 
     // Add permissions if creating Sub Admin
@@ -280,6 +295,7 @@ function Users() {
       onSuccess: () => {
         closeAddModal();
         setSelectedPermissions([]);
+        setEmailVerified(false); // Reset email verification checkbox
         setSearchTerm(''); // Clear search bar after creating user
       },
     });
@@ -296,6 +312,11 @@ function Users() {
       address: userForm.address,
       company_details: userForm.company_details,
     };
+
+    // Add email_verified if user is SUPER_ADMIN and editing a BUYER
+    if (currentUser?.role === 'SUPER_ADMIN' && selectedUser?.role === 'BUYER') {
+      updateData.email_verified = editEmailVerified;
+    }
 
     updateUserMutation.mutate(
       { id: selectedUser._id, data: updateData },
@@ -1458,6 +1479,24 @@ function Users() {
               </Grid>
             )}
 
+            {/* Email Verification Checkbox */}
+            <Grid size={{ xs: 12 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                <Checkbox
+                  checked={emailVerified}
+                  onChange={(e) => setEmailVerified(e.target.checked)}
+                />
+                <Box>
+                  <Typography variant="body2" fontWeight="medium">
+                    Email Verified
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Mark this user's email as verified. If checked, they can log in immediately without email verification.
+                  </Typography>
+                </Box>
+              </Box>
+            </Grid>
+
             <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 1 }}>
                 <Typography variant="caption" color="text.secondary">
@@ -1637,6 +1676,28 @@ function Users() {
                 onChange={(e) => updateUserForm("phone", e.target.value)}
               />
             </Grid>
+
+            {/* Email Verification Toggle - Only for SUPER_ADMIN and buyers */}
+            {currentUser?.role === 'SUPER_ADMIN' && selectedUser?.role === 'BUYER' && (
+              <Grid size={{ xs: 12 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                  <Checkbox
+                    checked={editEmailVerified}
+                    onChange={(e) => setEditEmailVerified(e.target.checked)}
+                  />
+                  <Box>
+                    <Typography variant="body2" fontWeight="medium">
+                      Email Verified
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {editEmailVerified
+                        ? "This user's email is verified and they can login."
+                        : "This user's email is not verified. Check this to manually verify their email."}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Grid>
+            )}
 
             <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 1 }}>

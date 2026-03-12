@@ -194,7 +194,7 @@ export const changePassword = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — create a user account (BUYER or SUB_ADMIN)
 export const create = catchAsync(async (req, res) => {
-  const { name, email, password, phone, address, company_details, role, permissions } = req.body;
+  const { name, email, password, phone, address, company_details, role, permissions, email_verified } = req.body;
 
   if (!name || !email || !password) {
     throw new AppError("Name, email and password are required", 400);
@@ -217,6 +217,13 @@ export const create = catchAsync(async (req, res) => {
     }
   }
 
+  // Determine email verification status
+  // If admin explicitly sets email_verified=true, user can login immediately
+  // Otherwise, user needs to verify email (BUYER) or is auto-approved (SUB_ADMIN)
+  const isEmailVerified = email_verified === true;
+  const isActive = isEmailVerified; // Active if email is verified
+  const approvalStatus = isEmailVerified ? "APPROVED" : "PENDING";
+
   const user = await User.create({
     name,
     email,
@@ -226,10 +233,9 @@ export const create = catchAsync(async (req, res) => {
     company_details,
     role: userRole,
     permissions: userRole === ROLES.SUB_ADMIN ? (permissions || []) : [],
-    // Admin-created users are automatically verified and approved
-    email_verified: true,
-    is_active: true,
-    approval_status: "APPROVED",
+    email_verified: isEmailVerified,
+    is_active: isActive,
+    approval_status: approvalStatus,
   });
 
   // Remove password from response
@@ -245,7 +251,7 @@ export const create = catchAsync(async (req, res) => {
 // ===========================
 // SUPER_ADMIN only — create sub-admin with permissions
 export const createSubAdmin = catchAsync(async (req, res) => {
-  const { name, email, password, phone, permissions } = req.body;
+  const { name, email, password, phone, permissions, email_verified } = req.body;
 
   if (!name || !email || !password) {
     throw new AppError("Name, email and password are required", 400);
@@ -264,6 +270,11 @@ export const createSubAdmin = catchAsync(async (req, res) => {
     }
   }
 
+  // Determine email verification status
+  const isEmailVerified = email_verified === true;
+  const isActive = isEmailVerified;
+  const approvalStatus = isEmailVerified ? "APPROVED" : "PENDING";
+
   const user = await User.create({
     name,
     email,
@@ -271,10 +282,9 @@ export const createSubAdmin = catchAsync(async (req, res) => {
     phone,
     role: ROLES.SUB_ADMIN,
     permissions: permissions || [],
-    // Admin-created users are automatically verified and approved
-    email_verified: true,
-    is_active: true,
-    approval_status: "APPROVED",
+    email_verified: isEmailVerified,
+    is_active: isActive,
+    approval_status: approvalStatus,
   });
 
   const userObj = user.toObject();
@@ -288,7 +298,7 @@ export const createSubAdmin = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — update user details
 export const update = catchAsync(async (req, res) => {
-  const { name, email, phone, address, company_details } = req.body;
+  const { name, email, phone, address, company_details, email_verified } = req.body;
 
   const user = await User.findById(req.params.id).select("-password");
 
@@ -309,6 +319,16 @@ export const update = catchAsync(async (req, res) => {
   if (phone !== undefined) user.phone = phone;
   if (address !== undefined) user.address = address;
   if (company_details !== undefined) user.company_details = company_details;
+
+  // Allow admin to update email verification status
+  // When email is verified, also activate the user and approve them
+  if (email_verified !== undefined) {
+    user.email_verified = email_verified;
+    if (email_verified === true) {
+      user.is_active = true;
+      user.approval_status = "APPROVED";
+    }
+  }
 
   await user.save();
 
