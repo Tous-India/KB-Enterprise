@@ -499,12 +499,7 @@ export const forgotPasswordInitiate = catchAsync(async (req, res) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    // Don't reveal if email exists for security
-    return ApiResponse.success(
-      res,
-      { email },
-      "If this email is registered, you will receive a verification code."
-    );
+    throw new AppError("This email is not registered in our system. Please check your email or register a new account.", 404);
   }
 
   // Only allow password reset for approved users
@@ -645,11 +640,7 @@ export const forgotPasswordResendOTP = catchAsync(async (req, res) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    return ApiResponse.success(
-      res,
-      { email },
-      "If this email is registered, you will receive a new verification code."
-    );
+    throw new AppError("This email is not registered in our system.", 404);
   }
 
   // Rate limiting
