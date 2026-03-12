@@ -47,6 +47,7 @@ import AdminQuotations from "./admin/pages/Quotations.jsx";
 import AdminPaymentRecords from "./admin/pages/PaymentRecords.jsx";
 import AdminArchives from "./admin/pages/Archives.jsx";
 import AdminProfitAnalysis from "./admin/pages/ProfitAnalysis.jsx";
+import AdminProfile from "./admin/pages/Profile.jsx";
 
 // Import Buyer Components
 import BuyerLayout from "./buyer/layout/BuyerLayout.jsx";
@@ -138,6 +139,7 @@ const router = createBrowserRouter(
         <Route path="purchase-dashboard" element={<AdminPurchaseDashboard />} />
         <Route path="archives" element={<AdminArchives />} />
         <Route path="profit-analysis" element={<AdminProfitAnalysis />} />
+        <Route path="profile" element={<AdminProfile />} />
       </Route>
 
       {/* Buyer Routes - Protected */}

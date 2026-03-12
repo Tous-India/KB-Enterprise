@@ -46,6 +46,7 @@ import {
   HowToReg,
   Archive as ArchiveIcon,
   TrendingUp as TrendingUpIcon,
+  Person as PersonIcon,
 } from "@mui/icons-material";
 import { useAuth } from "../../context/AuthContext";
 import useNotificationStore from "../../stores/useNotificationStore";
@@ -476,6 +477,12 @@ function AdminLayout() {
               horizontal: "right",
             }}
           >
+            <MenuItem onClick={() => { handleProfileMenuClose(); navigate("/admin/profile"); }}>
+              <ListItemIcon>
+                <PersonIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Profile</ListItemText>
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" />
