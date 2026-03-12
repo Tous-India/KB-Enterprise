@@ -280,6 +280,7 @@ function Users() {
       onSuccess: () => {
         closeAddModal();
         setSelectedPermissions([]);
+        setSearchTerm(''); // Clear search bar after creating user
       },
     });
   };
@@ -483,11 +484,29 @@ function Users() {
             </FormControl>
           </Grid>
           <Grid size={{ xs: 12, md: 5 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <FilterList color="action" />
-              <Typography variant="body2" color="text.secondary">
-                Showing {paginatedUsers.length} of {sortedUsers.length} users
-              </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, justifyContent: "space-between" }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <FilterList color="action" />
+                <Typography variant="body2" color="text.secondary">
+                  Showing {paginatedUsers.length} of {sortedUsers.length} users
+                </Typography>
+              </Box>
+              {(searchTerm || roleFilter !== 'all' || statusFilter !== 'all') && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Close />}
+                  onClick={() => {
+                    setSearchTerm('');
+                    setRoleFilter('all');
+                    setStatusFilter('all');
+                    setPage(0);
+                  }}
+                  sx={{ minWidth: 'auto' }}
+                >
+                  Clear Filters
+                </Button>
+              )}
             </Box>
           </Grid>
         </Grid>
