@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import {
   Dialog,
   DialogTitle,
@@ -125,7 +126,7 @@ function EditPIItemsDialog({ open, onClose, pi, onSave, exchangeRate = 83.5 }) {
   // Handle item removal
   const handleRemoveItem = (index) => {
     if (items.length <= 1) {
-      alert('PI must have at least one item')
+      toast.warning('PI must have at least one item')
       return
     }
     setItems(items.filter((_, i) => i !== index))

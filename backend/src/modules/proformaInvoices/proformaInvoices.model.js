@@ -92,6 +92,7 @@ const ProformaInvoiceSchema = new Schema(
     issue_date: {
       type: Date,
       default: Date.now,
+      index: true,
     },
 
     valid_until: Date,

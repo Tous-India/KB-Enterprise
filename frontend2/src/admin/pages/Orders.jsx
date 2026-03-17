@@ -56,6 +56,7 @@ import proformaInvoicesService from "../../services/proformaInvoices.service";
 import { dispatchesService } from "../../services";
 import InvoicePrintPreview from "../components/InvoicePrintPreview";
 import { showSuccess, showError } from "../../utils/toast";
+import { toast } from "react-toastify";
 
 // Add print styles
 const printStyles = `
@@ -106,6 +107,10 @@ function Orders() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState(null);
+
+  // Editable order date state
+  const [editOrderDate, setEditOrderDate] = useState("");
+  const [savingOrderDate, setSavingOrderDate] = useState(false);
 
   // Print preview ref
   const invoicePrintRef = useRef(null);
@@ -278,7 +283,43 @@ function Orders() {
   // View order details
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
+    // Initialize the edit date with the order's current date
+    const orderDate = order.order_date || order.createdAt;
+    setEditOrderDate(orderDate ? new Date(orderDate).toISOString().split("T")[0] : "");
     setShowViewModal(true);
+  };
+
+  // Save order date (handles both Orders and Proforma Invoices)
+  const handleSaveOrderDate = async () => {
+    if (!selectedOrder || !editOrderDate) return;
+
+    try {
+      setSavingOrderDate(true);
+
+      let result;
+      if (selectedOrder.source_type === 'PROFORMA_INVOICE') {
+        // Update Proforma Invoice's issue_date
+        result = await proformaInvoicesService.update(selectedOrder._id, { issue_date: editOrderDate });
+      } else {
+        // Update Order's order_date
+        result = await ordersService.update(selectedOrder._id, { order_date: editOrderDate });
+      }
+
+      if (result.success) {
+        toast.success("Date updated successfully");
+        // Update the local state
+        setSelectedOrder({ ...selectedOrder, order_date: editOrderDate });
+        // Refresh the list
+        fetchOrders();
+      } else {
+        toast.error(result.error || "Failed to update date");
+      }
+    } catch (err) {
+      console.error("Error updating date:", err);
+      toast.error(err.response?.data?.message || "Failed to update date");
+    } finally {
+      setSavingOrderDate(false);
+    }
   };
 
   // Collect payment and dispatch - NEW FLOW
@@ -534,7 +575,6 @@ function Orders() {
             ${printContent.outerHTML}
             <script>
               window.onload = function() {
-                alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                 window.print();
               };
             <\/script>
@@ -1052,6 +1092,35 @@ function Orders() {
           <DialogContent sx={{ p: 0 }}>
             {selectedOrder && (
               <Box>
+                {/* Order Date - Editable */}
+                <Box sx={{ p: 2, bgcolor: '#fafafa', borderBottom: '1px solid #e0e0e0' }}>
+                  <Typography variant="subtitle2" fontWeight="bold" gutterBottom sx={{ fontSize: '12px' }}>
+                    Order Date
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <TextField
+                      type="date"
+                      size="small"
+                      value={editOrderDate}
+                      onChange={(e) => setEditOrderDate(e.target.value)}
+                      sx={{ width: 180 }}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={handleSaveOrderDate}
+                      disabled={savingOrderDate || !editOrderDate}
+                      sx={{ fontSize: '12px' }}
+                    >
+                      {savingOrderDate ? <CircularProgress size={16} /> : "Update"}
+                    </Button>
+                    <Typography variant="caption" color="text.secondary">
+                      Created: {selectedOrder.createdAt ? new Date(selectedOrder.createdAt).toLocaleDateString() : "-"}
+                    </Typography>
+                  </Box>
+                </Box>
+
                 {/* Dispatch Tracking Summary */}
                 <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderBottom: '1px solid #e0e0e0' }}>
                   <Grid container spacing={2}>

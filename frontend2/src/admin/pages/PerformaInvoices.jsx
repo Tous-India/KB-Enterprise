@@ -108,6 +108,15 @@ function PerformaInvoices() {
   const [error, setError] = useState(null)
   const [selectedPI, setSelectedPI] = useState(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
+
+  // Editable issue date state
+  const [editIssueDate, setEditIssueDate] = useState("")
+  const [savingIssueDate, setSavingIssueDate] = useState(false)
+
+  // Editable valid until date state
+  const [editValidUntil, setEditValidUntil] = useState("")
+  const [savingValidUntil, setSavingValidUntil] = useState(false)
+
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [showDispatchModal, setShowDispatchModal] = useState(false)
   const [showEditItemsModal, setShowEditItemsModal] = useState(false)
@@ -306,7 +315,52 @@ function PerformaInvoices() {
 
   const handleViewDetails = (pi) => {
     setSelectedPI(pi)
+    // Initialize the edit dates with the PI's current dates
+    const issueDate = pi.issue_date || pi.createdAt
+    setEditIssueDate(issueDate ? new Date(issueDate).toISOString().split("T")[0] : "")
+    const validUntil = pi.valid_until
+    setEditValidUntil(validUntil ? new Date(validUntil).toISOString().split("T")[0] : "")
     setShowDetailModal(true)
+  }
+
+  // Save issue date
+  const handleSaveIssueDate = async () => {
+    if (!selectedPI || !editIssueDate) return
+
+    try {
+      setSavingIssueDate(true)
+      await proformaInvoicesService.update(selectedPI._id, { issue_date: editIssueDate })
+      toast.success("Issue date updated successfully")
+      // Update the local state
+      setSelectedPI({ ...selectedPI, issue_date: editIssueDate })
+      // Refresh the list
+      fetchProformaInvoices()
+    } catch (err) {
+      console.error("Error updating issue date:", err)
+      toast.error(err.response?.data?.message || "Failed to update issue date")
+    } finally {
+      setSavingIssueDate(false)
+    }
+  }
+
+  // Save valid until date
+  const handleSaveValidUntil = async () => {
+    if (!selectedPI || !editValidUntil) return
+
+    try {
+      setSavingValidUntil(true)
+      await proformaInvoicesService.update(selectedPI._id, { valid_until: editValidUntil })
+      toast.success("Valid until date updated successfully")
+      // Update the local state
+      setSelectedPI({ ...selectedPI, valid_until: editValidUntil })
+      // Refresh the list
+      fetchProformaInvoices()
+    } catch (err) {
+      console.error("Error updating valid until date:", err)
+      toast.error(err.response?.data?.message || "Failed to update valid until date")
+    } finally {
+      setSavingValidUntil(false)
+    }
   }
 
   const handlePreview = (pi) => {
@@ -380,7 +434,6 @@ function PerformaInvoices() {
             ${printContent.outerHTML}
             <script>
               window.onload = function() {
-                alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                 window.print();
               };
             <\/script>
@@ -423,7 +476,6 @@ function PerformaInvoices() {
               ${printRef.current.outerHTML}
               <script>
                 window.onload = function() {
-                  alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                   window.print();
                 };
               <\/script>
@@ -818,7 +870,7 @@ function PerformaInvoices() {
     if (selectedPI?.performa_invoice_id === pi.performa_invoice_id) {
       setSelectedPI(updatedPI)
     }
-    alert(`PI renewed successfully! New validity: ${validityDays} days (until ${newValidUntil.toLocaleDateString()})`)
+    toast.success(`PI renewed successfully! New validity: ${validityDays} days (until ${newValidUntil.toLocaleDateString()})`)
   }
 
   // Reactivate PI - changes status from EXPIRED/REJECTED to PENDING (same PI number)
@@ -854,7 +906,7 @@ function PerformaInvoices() {
       setSelectedPI(updatedPI)
     }
     setActiveTab(0) // Go to All tab to see the reactivated PI
-    alert(`PI reactivated successfully!\n\nPI Number: ${pi.performa_invoice_number} (unchanged)\nStatus: ${pi.status} → APPROVED\nNew Validity: 30 days\n\n✓ PI is now editable`)
+    toast.success(`PI reactivated successfully! PI: ${pi.performa_invoice_number}, Status: APPROVED, New Validity: 30 days`)
   }
 
   // Clone PI - creates a copy with new PI number, resets payment, keeps products
@@ -991,13 +1043,13 @@ function PerformaInvoices() {
 
     // Check if there are multiple items
     if (invoiceItems.length <= 1) {
-      alert('Cannot remove item: At least one item must remain in the invoice.')
+      toast.warning('Cannot remove item: At least one item must remain in the invoice.')
       return
     }
 
     // Check if the item has inventory
     if (itemToRemove.has_inventory) {
-      alert(`Cannot remove "${itemToRemove.product_name}": This product has inventory (${itemToRemove.inventory_quantity} units available). Items with inventory cannot be removed.`)
+      toast.warning(`Cannot remove "${itemToRemove.product_name}": This product has inventory (${itemToRemove.inventory_quantity} units available). Items with inventory cannot be removed.`)
       return
     }
 
@@ -1170,13 +1222,13 @@ function PerformaInvoices() {
   const handleGenerateInvoice = (pi) => {
     // Only allow for fully paid PIs
     if (pi.payment_status !== 'PAID') {
-      alert('Invoice can only be generated after full payment is received.')
+      toast.warning('Invoice can only be generated after full payment is received.')
       return
     }
 
     // Check if invoice already generated
     if (pi.invoice_generated) {
-      alert('Invoice has already been generated for this PI.')
+      toast.info('Invoice has already been generated for this PI.')
       return
     }
 
@@ -2306,30 +2358,53 @@ function PerformaInvoices() {
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Stack spacing={0.5}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="body2" fontWeight="medium">
                           Issue Date:
                         </Typography>
-                        <Typography variant="body2">
-                          {new Date(selectedPI.issue_date).toLocaleDateString()}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={editIssueDate}
+                            onChange={(e) => setEditIssueDate(e.target.value)}
+                            sx={{ width: 150 }}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={handleSaveIssueDate}
+                            disabled={savingIssueDate || !editIssueDate}
+                            sx={{ fontSize: '11px', minWidth: 'auto', px: 1 }}
+                          >
+                            {savingIssueDate ? <CircularProgress size={14} /> : "Save"}
+                          </Button>
+                        </Box>
                       </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="body2" fontWeight="medium">
                           Valid Until:
                         </Typography>
-                        <Stack alignItems="flex-end">
-                          <Typography variant="body2">
-                            {new Date(selectedPI.valid_until).toLocaleDateString()}
-                          </Typography>
-                          {selectedPI.validity_period && (
-                            <Typography variant="caption" color="primary.main">
-                              ({selectedPI.validity_period === '7_DAYS' ? '1 Week' :
-                                selectedPI.validity_period === '15_DAYS' ? '15 Days' :
-                                selectedPI.validity_period === '30_DAYS' ? '30 Days' : ''})
-                            </Typography>
-                          )}
-                        </Stack>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={editValidUntil}
+                            onChange={(e) => setEditValidUntil(e.target.value)}
+                            sx={{ width: 150 }}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={handleSaveValidUntil}
+                            disabled={savingValidUntil || !editValidUntil}
+                            sx={{ fontSize: '11px', minWidth: 'auto', px: 1 }}
+                          >
+                            {savingValidUntil ? <CircularProgress size={14} /> : "Save"}
+                          </Button>
+                        </Box>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography variant="body2" fontWeight="medium">
@@ -2550,7 +2625,7 @@ function PerformaInvoices() {
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => alert('Exchange rate updated for this PI')}
+                          onClick={() => toast.success('Exchange rate updated for this PI')}
                         >
                           <Refresh fontSize="small" />
                         </IconButton>

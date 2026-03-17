@@ -1,11 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { TrendingUp } from "lucide-react";
-import purchaseOrdersData from "../../mock/purchaseOrders.json";
-import quotationsData from "../../mock/quotations.json";
-import ordersData from "../../mock/orders.json";
-import invoicesData from "../../mock/invoices.json";
-import productsData from "../../mock/products.json";
+import { TrendingUp, Loader2 } from "lucide-react";
+import dashboardService from "../../services/dashboard.service";
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -21,57 +17,43 @@ function Dashboard() {
     inStockProducts: 0,
     totalOrders: 0,
     totalInvoices: 0,
+    totalUsers: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const purchaseOrders = purchaseOrdersData.purchaseOrders || [];
-    const quotations = quotationsData.quotations || [];
-    const orders = ordersData.orders || [];
-    const invoices = invoicesData.invoices || [];
-    const products = productsData.products || [];
+    const fetchDashboardStats = async () => {
+      setLoading(true);
+      setError(null);
 
-    const pendingPOs = purchaseOrders.filter(
-      (po) => po.status === "PENDING"
-    ).length;
+      const result = await dashboardService.getSummary();
 
-    const activeQuotes = quotations.filter((q) => {
-      if (q.status === "ACCEPTED") return false;
-      const expiryDate = new Date(q.expiry_date);
-      return expiryDate > new Date();
-    }).length;
+      if (result.success && result.data) {
+        const data = result.data;
+        setStats({
+          pendingPOs: data.pendingPOs || 0,
+          activeQuotes: data.activeQuotations || 0,
+          openOrders: data.openOrders || 0,
+          unpaidInvoices: data.unpaidInvoices || 0,
+          lowStockProducts: data.lowStockProducts || 0,
+          totalRevenue: data.totalRevenue || 0,
+          paidInvoices: data.paidInvoices || 0,
+          totalProducts: data.totalProducts || 0,
+          dispatchedOrders: data.dispatchedOrders || 0,
+          inStockProducts: data.inStockProducts || 0,
+          totalOrders: data.totalOrders || 0,
+          totalInvoices: data.totalInvoices || 0,
+          totalUsers: data.totalUsers || 0,
+        });
+      } else {
+        setError(result.error || "Failed to load dashboard data");
+      }
 
-    const openOrders = orders.filter((o) => o.status === "OPEN").length;
-    const dispatchedOrders = orders.filter(
-      (o) => o.status === "DISPATCHED"
-    ).length;
-    const unpaidInvoices = invoices.filter((i) => i.status === "UNPAID").length;
-    const paidInvoicesArray = invoices.filter((i) => i.status === "PAID");
-    const lowStockProducts = products.filter(
-      (p) => p.total_quantity < 50 && p.total_quantity > 0
-    ).length;
-    const inStockProducts = products.filter(
-      (p) => p.stock_status === "In Stock"
-    ).length;
+      setLoading(false);
+    };
 
-    const totalRevenue = paidInvoicesArray.reduce(
-      (sum, i) => sum + i.total_amount,
-      0
-    );
-
-    setStats({
-      pendingPOs,
-      activeQuotes,
-      openOrders,
-      unpaidInvoices,
-      lowStockProducts,
-      totalRevenue,
-      paidInvoices: paidInvoicesArray.length,
-      totalProducts: products.length,
-      dispatchedOrders,
-      inStockProducts,
-      totalOrders: orders.length,
-      totalInvoices: invoices.length,
-    });
+    fetchDashboardStats();
   }, []);
 
   const statCards = [
@@ -180,7 +162,7 @@ function Dashboard() {
     },
     {
       title: "Total Users",
-      value: "24",
+      value: stats.totalUsers,
       subtitle: "Active Customers",
       color: "#64748b",
       statusColor: "text-slate-600",
@@ -188,6 +170,33 @@ function Dashboard() {
       link: "/admin/users",
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="admin-dashboard-main-page flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="admin-dashboard-main-page">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-600 font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard-main-page">

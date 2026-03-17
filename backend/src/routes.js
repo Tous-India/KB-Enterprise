@@ -9,7 +9,6 @@ import productRoutes from "./modules/products/products.routes.js";
 import categoryRoutes from "./modules/categories/categories.routes.js";
 import brandRoutes from "./modules/brands/brands.routes.js";
 import orderRoutes from "./modules/orders/orders.routes.js";
-import purchaseOrderRoutes from "./modules/purchaseOrders/purchaseOrders.routes.js";
 import quotationRoutes from "./modules/quotations/quotations.routes.js";
 import proformaRoutes from "./modules/proformaInvoices/proformaInvoices.routes.js";
 import paymentRecordRoutes from "./modules/paymentRecords/paymentRecords.routes.js";
@@ -24,7 +23,6 @@ import reportRoutes from "./modules/reports/reports.routes.js";
 // Purchase Management Module Routes
 import supplierRoutes from "./modules/suppliers/suppliers.routes.js";
 import piAllocationRoutes from "./modules/piAllocations/piAllocations.routes.js";
-import purchaseDashboardRoutes from "./modules/purchaseDashboard/purchaseDashboard.routes.js";
 import supplierOrderRoutes from "./modules/supplierOrders/supplierOrders.routes.js";
 
 // Dispatch Module
@@ -55,7 +53,7 @@ router.use("/products", productRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/brands", brandRoutes);
 router.use("/orders", orderRoutes);
-router.use("/purchase-orders", purchaseOrderRoutes);
+
 router.use("/quotations", quotationRoutes);
 router.use("/proforma-invoices", proformaRoutes);
 router.use("/payment-records", paymentRecordRoutes);
@@ -70,7 +68,6 @@ router.use("/reports", reportRoutes);
 // Purchase Management Routes
 router.use("/suppliers", supplierRoutes);
 router.use("/pi-allocations", piAllocationRoutes);
-router.use("/purchase-dashboard", purchaseDashboardRoutes);
 router.use("/supplier-orders", supplierOrderRoutes);
 
 // Dispatch Routes

@@ -91,6 +91,14 @@ function Quotations() {
   const [buyerCurrentEmail, setBuyerCurrentEmail] = useState(null);
   const printRef = useRef(null);
 
+  // Editable quote date state
+  const [editQuoteDate, setEditQuoteDate] = useState("");
+  const [savingQuoteDate, setSavingQuoteDate] = useState(false);
+
+  // Editable expiry date state
+  const [editExpiryDate, setEditExpiryDate] = useState("");
+  const [savingExpiryDate, setSavingExpiryDate] = useState(false);
+
   // Loading and error states
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -123,6 +131,7 @@ function Quotations() {
   const [orderToConvert, setOrderToConvert] = useState(null);
   const [createStep, setCreateStep] = useState(0);
   const [quoteForm, setQuoteForm] = useState({
+    quoteDate: new Date().toISOString().split("T")[0],
     expiryDays: 20,
     exchangeRate: 83.5,
     priceAdjustments: [],
@@ -182,6 +191,7 @@ function Quotations() {
     }
 
     setQuoteForm({
+      quoteDate: new Date().toISOString().split("T")[0],
       expiryDays: 20,
       exchangeRate: currentRate,
       priceAdjustments: (order.items || []).map((item) => {
@@ -234,6 +244,64 @@ function Quotations() {
   useEffect(() => {
     fetchQuotations();
   }, [fetchQuotations]);
+
+  // Initialize editQuoteDate and editExpiryDate when selectedQuote changes
+  useEffect(() => {
+    if (selectedQuote) {
+      const quoteDate = selectedQuote.quote_date || selectedQuote.createdAt;
+      setEditQuoteDate(quoteDate ? new Date(quoteDate).toISOString().split("T")[0] : "");
+      const expiryDate = selectedQuote.expiry_date;
+      setEditExpiryDate(expiryDate ? new Date(expiryDate).toISOString().split("T")[0] : "");
+    }
+  }, [selectedQuote]);
+
+  // Save quote date handler
+  const handleSaveQuoteDate = async () => {
+    if (!selectedQuote || !editQuoteDate) return;
+
+    setSavingQuoteDate(true);
+    try {
+      const result = await quotationsService.update(selectedQuote._id, { quote_date: editQuoteDate });
+      if (result.success) {
+        toast.success("Quote date updated successfully");
+        setSelectedQuote({ ...selectedQuote, quote_date: editQuoteDate, expiry_date: result.data?.quotation?.expiry_date || selectedQuote.expiry_date });
+        // Update expiry date field with new calculated value
+        if (result.data?.quotation?.expiry_date) {
+          setEditExpiryDate(new Date(result.data.quotation.expiry_date).toISOString().split("T")[0]);
+        }
+        fetchQuotations();
+      } else {
+        toast.error(result.error || "Failed to update quote date");
+      }
+    } catch (err) {
+      console.error("[Quotations] Error updating quote date:", err);
+      toast.error(err.message || "Failed to update quote date");
+    } finally {
+      setSavingQuoteDate(false);
+    }
+  };
+
+  // Save expiry date handler
+  const handleSaveExpiryDate = async () => {
+    if (!selectedQuote || !editExpiryDate) return;
+
+    setSavingExpiryDate(true);
+    try {
+      const result = await quotationsService.update(selectedQuote._id, { expiry_date: editExpiryDate });
+      if (result.success) {
+        toast.success("Expiry date updated successfully");
+        setSelectedQuote({ ...selectedQuote, expiry_date: editExpiryDate });
+        fetchQuotations();
+      } else {
+        toast.error(result.error || "Failed to update expiry date");
+      }
+    } catch (err) {
+      console.error("[Quotations] Error updating expiry date:", err);
+      toast.error(err.message || "Failed to update expiry date");
+    } finally {
+      setSavingExpiryDate(false);
+    }
+  };
 
   // Price adjustment handlers
   const handlePriceAdjustmentUSD = (productId, newPrice) => {
@@ -318,6 +386,7 @@ function Quotations() {
     const totals = calculateQuoteTotals();
 
     const quotationData = {
+      quote_date: quoteForm.quoteDate,
       exchange_rate: quoteForm.exchangeRate,
       expiry_days: quoteForm.expiryDays,
       items: orderToConvert.items.map((item) => {
@@ -615,7 +684,7 @@ function Quotations() {
             {quote.quote_number}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {formatDate(quote.createdAt)}
+            {formatDate(quote.quote_date || quote.createdAt)}
           </Typography>
         </TableCell>
 
@@ -934,13 +1003,24 @@ function Quotations() {
 
           {createStep === 0 && orderToConvert && (
             <Stack spacing={3}>
-              {/* Exchange Rate & Expiry */}
+              {/* Quote Date, Exchange Rate & Expiry */}
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                 <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                   Quotation Settings
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6 }}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Quote Date"
+                      type="date"
+                      value={quoteForm.quoteDate}
+                      onChange={(e) => setQuoteForm({ ...quoteForm, quoteDate: e.target.value })}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       fullWidth
                       size="small"
@@ -950,7 +1030,7 @@ function Quotations() {
                       onChange={(e) => setQuoteForm({ ...quoteForm, expiryDays: parseInt(e.target.value) || 20 })}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6 }}>
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <TextField
                       fullWidth
                       size="small"
@@ -1124,19 +1204,33 @@ function Quotations() {
                   Quotation Summary
                 </Typography>
                 <Grid container spacing={2}>
-                  <Grid size={{ xs: 6, sm: 3 }}>
+                  <Grid size={{ xs: 6, sm: 2 }}>
                     <Typography variant="caption" color="text.secondary">Customer</Typography>
                     <Typography variant="body2">{orderToConvert.customer_name}</Typography>
                   </Grid>
-                  <Grid size={{ xs: 6, sm: 3 }}>
+                  <Grid size={{ xs: 6, sm: 2 }}>
+                    <Typography variant="caption" color="text.secondary">Quote Date</Typography>
+                    <Typography variant="body2">{new Date(quoteForm.quoteDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 2 }}>
+                    <Typography variant="caption" color="text.secondary">Valid Until</Typography>
+                    <Typography variant="body2">
+                      {(() => {
+                        const expiryDate = new Date(quoteForm.quoteDate);
+                        expiryDate.setDate(expiryDate.getDate() + quoteForm.expiryDays);
+                        return expiryDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+                      })()}
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 6, sm: 2 }}>
                     <Typography variant="caption" color="text.secondary">Validity</Typography>
                     <Typography variant="body2">{quoteForm.expiryDays} days</Typography>
                   </Grid>
-                  <Grid size={{ xs: 6, sm: 3 }}>
+                  <Grid size={{ xs: 6, sm: 2 }}>
                     <Typography variant="caption" color="text.secondary">Exchange Rate</Typography>
                     <Typography variant="body2">$1 = ₹{quoteForm.exchangeRate.toFixed(2)}</Typography>
                   </Grid>
-                  <Grid size={{ xs: 6, sm: 3 }}>
+                  <Grid size={{ xs: 6, sm: 2 }}>
                     <Typography variant="caption" color="text.secondary">Items</Typography>
                     <Typography variant="body2">{orderToConvert.items?.length || 0} items</Typography>
                   </Grid>
@@ -1278,15 +1372,45 @@ function Quotations() {
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6, sm: 3 }}>
                     <Typography variant="caption" color="text.secondary">Quote Date</Typography>
-                    <Typography variant="body2" fontWeight="medium">
-                      {selectedQuote.createdAt ? new Date(selectedQuote.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-"}
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
+                      <TextField
+                        type="date"
+                        size="small"
+                        value={editQuoteDate}
+                        onChange={(e) => setEditQuoteDate(e.target.value)}
+                        sx={{ width: 150, "& input": { fontSize: "13px", py: 0.5 } }}
+                      />
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={handleSaveQuoteDate}
+                        disabled={savingQuoteDate || !editQuoteDate || editQuoteDate === (selectedQuote.quote_date ? new Date(selectedQuote.quote_date).toISOString().split("T")[0] : new Date(selectedQuote.createdAt).toISOString().split("T")[0])}
+                        sx={{ minWidth: "auto", px: 1.5, fontSize: "11px" }}
+                      >
+                        {savingQuoteDate ? <CircularProgress size={14} color="inherit" /> : "Save"}
+                      </Button>
+                    </Box>
                   </Grid>
                   <Grid size={{ xs: 6, sm: 3 }}>
                     <Typography variant="caption" color="text.secondary">Valid Until</Typography>
-                    <Typography variant="body2" fontWeight="medium">
-                      {selectedQuote.expiry_date ? new Date(selectedQuote.expiry_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "-"}
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
+                      <TextField
+                        type="date"
+                        size="small"
+                        value={editExpiryDate}
+                        onChange={(e) => setEditExpiryDate(e.target.value)}
+                        sx={{ width: 150, "& input": { fontSize: "13px", py: 0.5 } }}
+                      />
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={handleSaveExpiryDate}
+                        disabled={savingExpiryDate || !editExpiryDate || editExpiryDate === (selectedQuote.expiry_date ? new Date(selectedQuote.expiry_date).toISOString().split("T")[0] : "")}
+                        sx={{ minWidth: "auto", px: 1.5, fontSize: "11px" }}
+                      >
+                        {savingExpiryDate ? <CircularProgress size={14} color="inherit" /> : "Save"}
+                      </Button>
+                    </Box>
                   </Grid>
                   <Grid size={{ xs: 6, sm: 3 }}>
                     <Typography variant="caption" color="text.secondary">Exchange Rate</Typography>

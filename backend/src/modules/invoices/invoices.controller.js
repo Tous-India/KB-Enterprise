@@ -474,7 +474,15 @@ export const update = catchAsync(async (req, res) => {
     if (updateData[field] !== undefined) {
       // Handle date fields
       if (['invoice_date', 'due_date', 'shipping_date', 'delivery_date', 'payment_date'].includes(field)) {
-        invoice[field] = updateData[field] ? new Date(updateData[field]) : null;
+        if (updateData[field]) {
+          const dateValue = new Date(updateData[field]);
+          if (isNaN(dateValue.getTime())) {
+            throw new AppError(`Invalid date format for ${field}`, 400);
+          }
+          invoice[field] = dateValue;
+        } else {
+          invoice[field] = null;
+        }
       } else {
         invoice[field] = updateData[field];
       }

@@ -114,6 +114,13 @@ const QuotationSchema = new Schema(
     customer_name: String,
     customer_email: String,
 
+    // Document date (editable by admin for historical data entry)
+    quote_date: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
+
     notes: String,
     admin_notes: String,
 

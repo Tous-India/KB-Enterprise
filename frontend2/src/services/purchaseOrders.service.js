@@ -221,6 +221,36 @@ const purchaseOrdersService = {
   },
 
   /**
+   * Admin update purchase order (including po_date)
+   * @param {string} id - Purchase order ID
+   * @param {Object} poData - Updated purchase order data (can include po_date)
+   * @returns {Promise<{success: boolean, data: Object, error: string}>}
+   */
+  adminUpdate: async (id, poData) => {
+    try {
+      if (USE_MOCK_DATA) {
+        return {
+          success: true,
+          data: { _id: id, ...poData },
+        };
+      }
+
+      const response = await apiClient.put(ENDPOINTS.PURCHASE_ORDERS.ADMIN_UPDATE(id), poData);
+      return {
+        success: true,
+        data: response.data?.data?.purchaseOrder || response.data?.data || response.data,
+      };
+    } catch (error) {
+      console.error('[PurchaseOrders Service] Error admin updating:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to update purchase order',
+        data: null,
+      };
+    }
+  },
+
+  /**
    * Delete purchase order
    * @param {string} id - Purchase order ID
    * @returns {Promise<{success: boolean, error: string}>}

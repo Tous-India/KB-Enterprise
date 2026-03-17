@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import {
   Box,
   Typography,
@@ -99,7 +100,7 @@ function Payments() {
     ))
 
     setShowMarkPaidModal(false)
-    alert(`Payment ${selectedPayment.payment_id} marked as completed`)
+    toast.success(`Payment ${selectedPayment.payment_id} marked as completed`)
   }
 
   // Filter payments

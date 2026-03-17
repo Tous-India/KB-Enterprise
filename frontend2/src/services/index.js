@@ -14,7 +14,6 @@ export { default as authService } from './auth.service';
 // Purchase Management Services
 export { default as suppliersService } from './suppliers.service';
 export { default as piAllocationsService } from './piAllocations.service';
-export { default as purchaseDashboardService } from './purchaseDashboard.service';
 export { default as proformaInvoicesService } from './proformaInvoices.service';
 export { default as supplierOrdersService } from './supplierOrders.service';
 

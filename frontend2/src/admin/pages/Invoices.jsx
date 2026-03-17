@@ -60,7 +60,7 @@ import useInvoicesStore from "../../stores/useInvoicesStore";
 import invoiceSettingsData from "../../mock/invoiceSettings.json";
 import InvoicePrintPreview from "../components/InvoicePrintPreview";
 import SendEmailModal from "../components/SendEmailModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import apiClient from "../../services/api/client";
 import ENDPOINTS from "../../services/api/endpoints";
@@ -80,6 +80,7 @@ function Invoices() {
     filterCustomer,
     filterType,
     selectedInvoice,
+    setSelectedInvoice,
     isDetailModalOpen,
     isSeriesModalOpen,
     seriesTabValue,
@@ -118,6 +119,19 @@ function Invoices() {
   const [savingTitle, setSavingTitle] = useState(false);
   const invoiceTitleOptions = ['INVOICE', 'TAX INVOICE'];
 
+  // Edit invoice date state
+  const [editInvoiceDate, setEditInvoiceDate] = useState("");
+  const [savingInvoiceDate, setSavingInvoiceDate] = useState(false);
+
+  // Reset editInvoiceDate when selectedInvoice changes or modal closes
+  useEffect(() => {
+    if (selectedInvoice && isDetailModalOpen) {
+      setEditInvoiceDate(selectedInvoice.invoice_date ? new Date(selectedInvoice.invoice_date).toISOString().split('T')[0] : '');
+    } else {
+      setEditInvoiceDate("");
+    }
+  }, [selectedInvoice, isDetailModalOpen]);
+
   // Get computed values from store
   const filteredInvoices = getFilteredInvoices(invoices);
   const uniqueCustomers = getUniqueCustomers(invoices);
@@ -128,12 +142,12 @@ function Invoices() {
     if (!skipNumber || !skipReason) return;
     const num = parseInt(skipNumber);
     if (isNaN(num) || num <= invoiceSettings.invoiceSeries.last_invoice_number) {
-      alert("Invalid number. Must be greater than the last used invoice number.");
+      toast.error("Invalid number. Must be greater than the last used invoice number.");
       return;
     }
     if (invoiceSettings.skippedNumbers.some(s => s.number === num) ||
         invoiceSettings.reservedNumbers.some(r => r.number === num)) {
-      alert("This number is already skipped or reserved.");
+      toast.warning("This number is already skipped or reserved.");
       return;
     }
     const newSkipped = {
@@ -160,12 +174,12 @@ function Invoices() {
     if (!reserveNumber || !reserveFor) return;
     const num = parseInt(reserveNumber);
     if (isNaN(num) || num <= invoiceSettings.invoiceSeries.last_invoice_number) {
-      alert("Invalid number. Must be greater than the last used invoice number.");
+      toast.error("Invalid number. Must be greater than the last used invoice number.");
       return;
     }
     if (invoiceSettings.skippedNumbers.some(s => s.number === num) ||
         invoiceSettings.reservedNumbers.some(r => r.number === num)) {
-      alert("This number is already skipped or reserved.");
+      toast.warning("This number is already skipped or reserved.");
       return;
     }
     const expiryDate = new Date();
@@ -241,6 +255,27 @@ function Invoices() {
     }
   };
 
+  // Handle saving invoice date
+  const handleSaveInvoiceDate = async () => {
+    if (!selectedInvoice || !editInvoiceDate) return;
+
+    setSavingInvoiceDate(true);
+    try {
+      await apiClient.put(ENDPOINTS.INVOICES.UPDATE(selectedInvoice._id), {
+        invoice_date: editInvoiceDate
+      });
+      toast.success("Invoice date updated successfully");
+      // Update the selected invoice with new date so preview reflects the change
+      setSelectedInvoice({ ...selectedInvoice, invoice_date: editInvoiceDate });
+      refetch(); // Refresh the invoices list
+    } catch (err) {
+      console.error('[Invoices] Error updating invoice date:', err);
+      toast.error(err.response?.data?.message || "Failed to update invoice date");
+    } finally {
+      setSavingInvoiceDate(false);
+    }
+  };
+
   const handlePrintAction = () => {
     const printContent = printRef.current;
     if (printContent) {
@@ -307,7 +342,6 @@ function Invoices() {
             ${printContent.outerHTML}
             <script>
               window.onload = function() {
-                alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                 window.print();
               };
             <\/script>
@@ -892,6 +926,7 @@ function Invoices() {
             >
               <Stack direction="row" spacing={2} alignItems="center">
                 <Typography
+                  component="span"
                   variant="h6"
                   fontWeight="bold"
                   sx={{ fontSize: "18px" }}
@@ -948,10 +983,38 @@ function Invoices() {
               p: 2,
               bgcolor: '#e8e8e8',
               display: 'flex',
-              justifyContent: 'center',
+              flexDirection: 'column',
+              alignItems: 'center',
               overflowY: 'auto'
             }}
           >
+            {/* Invoice Date Edit Section */}
+            {selectedInvoice && (
+              <Paper sx={{ p: 2, mb: 2, width: '100%', maxWidth: 800 }}>
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Typography variant="body2" sx={{ fontSize: '13px', fontWeight: 500 }}>
+                    Invoice Date:
+                  </Typography>
+                  <TextField
+                    type="date"
+                    size="small"
+                    value={editInvoiceDate}
+                    onChange={(e) => setEditInvoiceDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ width: 180, '& input': { fontSize: '13px' } }}
+                  />
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleSaveInvoiceDate}
+                    disabled={savingInvoiceDate || !editInvoiceDate || editInvoiceDate === (selectedInvoice.invoice_date ? new Date(selectedInvoice.invoice_date).toISOString().split('T')[0] : '')}
+                    sx={{ fontSize: '12px' }}
+                  >
+                    {savingInvoiceDate ? <CircularProgress size={16} /> : 'Update Date'}
+                  </Button>
+                </Stack>
+              </Paper>
+            )}
             {selectedInvoice && (
               <InvoicePrintPreview
                 ref={printRef}
@@ -972,7 +1035,7 @@ function Invoices() {
           <DialogTitle>
             <Stack direction="row" spacing={2} alignItems="center">
               <Settings color="primary" />
-              <Typography variant="h6" fontWeight="bold" sx={{ fontSize: "18px" }}>
+              <Typography component="span" variant="h6" fontWeight="bold" sx={{ fontSize: "18px" }}>
                 Invoice Series Management
               </Typography>
             </Stack>

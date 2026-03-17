@@ -15,11 +15,40 @@ export default defineConfig({
         target: "http://localhost:5000",
         changeOrigin: true,
         secure: false,
+        // Suppress proxy errors in console when backend is unavailable
+        configure: (proxy) => {
+          proxy.on('error', (err, _req, res) => {
+            // Silently handle all connection errors in development
+            // AggregateError contains ECONNREFUSED inside its errors array
+            const isConnectionError =
+              err.code === 'ECONNREFUSED' ||
+              err.name === 'AggregateError' ||
+              err.message?.includes('ECONNREFUSED');
+
+            if (isConnectionError && res && !res.headersSent) {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Backend unavailable', code: 'ECONNREFUSED' }));
+            }
+          });
+        },
       },
       "/uploads": {
         target: "http://localhost:5000",
         changeOrigin: true,
         secure: false,
+        configure: (proxy) => {
+          proxy.on('error', (err, _req, res) => {
+            const isConnectionError =
+              err.code === 'ECONNREFUSED' ||
+              err.name === 'AggregateError' ||
+              err.message?.includes('ECONNREFUSED');
+
+            if (isConnectionError && res && !res.headersSent) {
+              res.writeHead(503, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Backend unavailable', code: 'ECONNREFUSED' }));
+            }
+          });
+        },
       },
     },
   },

@@ -2,6 +2,39 @@
 
 A full-stack CRM (Customer Relationship Management) system built for KB Enterprises to manage buyers, orders, invoices, quotations, proforma invoices, and product catalogs with comprehensive admin and buyer portals.
 
+---
+
+## Recent Updates
+
+### March 2026
+
+#### Inline Date Editing
+All document dates are now editable inline throughout the system with instant update functionality:
+
+| Document | Editable Fields | Location |
+|----------|----------------|----------|
+| **Quotations** | Issue Date, Valid Until | Quotation Details modal |
+| **Proforma Invoices** | Issue Date, Valid Until | PI Details modal |
+| **Orders** | Order Date | Open Orders detail view |
+| **Invoices** | Invoice Date | Invoice Details modal |
+| **Dispatched Orders** | Dispatch Date, Est. Delivery Date | Dispatch Details modal |
+
+#### Payment Record Improvements
+- Fixed: Payment dates entered during "Collect Payment" now properly save to the payment record
+- Statement displays correct payment dates after admin verification
+
+#### Sub Admin User Management
+- Admin can create Sub Admin users with customizable permissions
+- Granular permission control: `manage_users`, `manage_orders`, `manage_products`, `view_analytics`, `manage_quotes`, `manage_payments`, `manage_invoices`, `manage_dispatch`
+- Auto-verify and approve admin-created users
+
+#### UX Improvements
+- Replaced all browser `alert()` dialogs with toast notifications (react-toastify)
+- Search bar persistence across page navigation with Clear Filters button
+- Improved error handling for forgot password flow (shows error for unregistered emails)
+
+---
+
 ## Tech Stack
 
 ### Backend
@@ -368,7 +401,7 @@ The quotation system has 5 distinct status tabs:
 | Quotations | `/admin/quotations` | 5-tab quotation management |
 | Proforma Invoices | `/admin/performa-invoices` | PI management with item editing |
 | Orders | `/admin/orders` | Open orders with invoice preview |
-| Dispatched Orders | `/admin/dispatched-orders` | Shipment tracking |
+| Dispatched Orders | `/admin/dispatched-orders` | Shipment tracking with editable dispatch/delivery dates |
 | Invoices | `/admin/invoices` | Invoice management |
 | Manual Invoice | `/admin/manual-invoice` | Create manual invoices |
 | Payments | `/admin/payments` | Payment tracking |

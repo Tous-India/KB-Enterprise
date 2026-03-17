@@ -131,17 +131,6 @@ const REPORT_CONFIGS = {
       { label: "Active", key: (r) => (r.is_active ? "Yes" : "No"), x: 508, width: 35 },
     ],
   },
-  purchaseOrders: {
-    title: "PURCHASE ORDERS REPORT",
-    columns: [
-      { label: "PO #", key: "po_number", x: 52, width: 80 },
-      { label: "Buyer", key: (r) => r.buyer?.name || "—", x: 135, width: 100 },
-      { label: "Date", key: (r) => formatDate(r.po_date || r.createdAt), x: 238, width: 70 },
-      { label: "Items", key: (r) => String(r.items?.length || 0), x: 312, width: 40, align: "center" },
-      { label: "Amount", key: (r) => currency(r.total_amount), x: 355, width: 65, align: "right" },
-      { label: "Status", key: "status", x: 425, width: 115 },
-    ],
-  },
   statements: {
     title: "STATEMENTS REPORT",
     columns: [
@@ -244,7 +233,7 @@ export function generateReportPDF(reportType, data, filters = {}) {
       drawLine(doc, y + 2, 40, 802);
 
       // --- Summary for financial reports ---
-      if (["invoices", "payments", "orders", "quotations", "purchaseOrders"].includes(reportType)) {
+      if (["invoices", "payments", "orders", "quotations"].includes(reportType)) {
         y += 15;
         const amountField =
           reportType === "payments" ? "amount" : "total_amount";

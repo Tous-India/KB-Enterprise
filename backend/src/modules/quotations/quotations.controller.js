@@ -60,15 +60,57 @@ export const create = catchAsync(async (req, res) => {
 // ===========================
 export const update = catchAsync(async (req, res) => {
   const { id } = req.params;
+  const { quote_date, expiry_date, expiry_days, ...otherFields } = req.body;
 
-  const quotation = await Quotation.findByIdAndUpdate(id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const quotation = await Quotation.findById(id);
 
   if (!quotation) {
     throw new AppError("Quotation not found", 404);
   }
+
+  // If quote_date is being updated, recalculate expiry_date (unless expiry_date is also provided)
+  if (quote_date !== undefined) {
+    const newQuoteDate = new Date(quote_date);
+    quotation.quote_date = newQuoteDate;
+
+    // Only recalculate expiry_date if not directly provided
+    if (expiry_date === undefined) {
+      // Calculate validity days from existing dates, or use provided expiry_days, or default to 30
+      let validityDays = expiry_days;
+      if (validityDays === undefined && quotation.quote_date && quotation.expiry_date) {
+        const oldQuoteDate = new Date(quotation.quote_date);
+        const oldExpiryDate = new Date(quotation.expiry_date);
+        validityDays = Math.round((oldExpiryDate - oldQuoteDate) / (1000 * 60 * 60 * 24));
+      }
+      validityDays = validityDays || 30;
+
+      const newExpiryDate = new Date(newQuoteDate);
+      newExpiryDate.setDate(newExpiryDate.getDate() + validityDays);
+      quotation.expiry_date = newExpiryDate;
+    }
+  }
+
+  // If expiry_date is directly provided, use it
+  if (expiry_date !== undefined) {
+    const newExpiryDate = new Date(expiry_date);
+    if (isNaN(newExpiryDate.getTime())) {
+      throw new AppError("Invalid expiry date format", 400);
+    }
+    quotation.expiry_date = newExpiryDate;
+  } else if (expiry_days !== undefined && quote_date === undefined) {
+    // If only expiry_days is updated (no quote_date), recalculate from existing quote_date
+    const baseDate = quotation.quote_date || quotation.createdAt || new Date();
+    const newExpiryDate = new Date(baseDate);
+    newExpiryDate.setDate(newExpiryDate.getDate() + expiry_days);
+    quotation.expiry_date = newExpiryDate;
+  }
+
+  // Update other fields
+  Object.keys(otherFields).forEach((key) => {
+    quotation[key] = otherFields[key];
+  });
+
+  await quotation.save();
 
   return ApiResponse.success(res, { quotation }, "Quotation updated");
 });

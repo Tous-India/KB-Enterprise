@@ -308,7 +308,6 @@ function Statements() {
             ${printContent.outerHTML}
             <script>
               window.onload = function() {
-                alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                 window.print();
               };
             <\/script>

@@ -133,9 +133,9 @@ export const getById = catchAsync(async (req, res) => {
 // POST /api/orders
 // ===========================
 // Admin only — create order from accepted/converted quotation
-// Body: { quotation, shipping_address, notes, estimated_delivery }
+// Body: { quotation, shipping_address, notes, estimated_delivery, order_date }
 export const create = catchAsync(async (req, res) => {
-  const { quotation: quotationId, shipping_address, notes, estimated_delivery } = req.body || {};
+  const { quotation: quotationId, shipping_address, notes, estimated_delivery, order_date } = req.body || {};
 
   if (!quotationId) {
     throw new AppError("Quotation ID is required", 400);
@@ -151,6 +151,16 @@ export const create = catchAsync(async (req, res) => {
 
   if (quotation.status !== "ACCEPTED" && quotation.status !== "CONVERTED") {
     throw new AppError("Only accepted quotations can be converted to orders", 400);
+  }
+
+  // Validate order_date if provided
+  let orderDate = new Date();
+  if (order_date) {
+    const dateValue = new Date(order_date);
+    if (isNaN(dateValue.getTime())) {
+      throw new AppError("Invalid order date format", 400);
+    }
+    orderDate = dateValue;
   }
 
   // Copy items from quotation
@@ -177,6 +187,7 @@ export const create = catchAsync(async (req, res) => {
     shipping_address: shipping_address || quotation.purchase_order?.shipping_address,
     notes,
     estimated_delivery,
+    order_date: orderDate,
   });
 
   // Mark quotation as converted and link the order
@@ -193,7 +204,7 @@ export const create = catchAsync(async (req, res) => {
 // Admin only — update order fields
 export const update = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { notes, admin_notes, estimated_delivery, shipping_address } = req.body || {};
+  const { notes, admin_notes, estimated_delivery, shipping_address, order_date } = req.body || {};
 
   const order = await Order.findById(id);
 
@@ -205,6 +216,15 @@ export const update = catchAsync(async (req, res) => {
   if (admin_notes !== undefined) order.admin_notes = admin_notes;
   if (estimated_delivery !== undefined) order.estimated_delivery = estimated_delivery;
   if (shipping_address !== undefined) order.shipping_address = shipping_address;
+
+  // Update order_date with format validation
+  if (order_date !== undefined) {
+    const dateValue = new Date(order_date);
+    if (isNaN(dateValue.getTime())) {
+      throw new AppError("Invalid date format", 400);
+    }
+    order.order_date = dateValue;
+  }
 
   await order.save();
 
@@ -548,6 +568,7 @@ export const convertToQuotation = catchAsync(async (req, res) => {
   const {
     exchange_rate,
     expiry_days,
+    quote_date,
     items,
     subtotal,
     total_amount,
@@ -604,8 +625,9 @@ export const convertToQuotation = catchAsync(async (req, res) => {
     };
   });
 
-  // Calculate expiry date
-  const expiryDate = new Date();
+  // Calculate expiry date from quote_date (or today if not provided)
+  const baseDate = quote_date ? new Date(quote_date) : new Date();
+  const expiryDate = new Date(baseDate);
   expiryDate.setDate(expiryDate.getDate() + (expiry_days || 30));
 
   // Create the Quotation document in database
@@ -623,6 +645,7 @@ export const convertToQuotation = catchAsync(async (req, res) => {
     shipping: order.shipping || 0,
     total_amount: total_amount || order.total_amount || 0,
     exchange_rate: exchange_rate || 0,
+    quote_date: baseDate,
     expiry_date: expiryDate,
     logistic_charges: logistic_charges || 0,
     custom_duty: custom_duty || 0,

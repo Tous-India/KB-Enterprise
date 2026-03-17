@@ -361,12 +361,12 @@ function ProformaInvoices() {
       // Validate file type
       const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"];
       if (!validTypes.includes(file.type)) {
-        alert("Please upload an image (JPG, PNG, GIF, WebP) or PDF file.");
+        toast.error("Please upload an image (JPG, PNG, GIF, WebP) or PDF file.");
         return;
       }
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert("File size should be less than 5MB.");
+        toast.error("File size should be less than 5MB.");
         return;
       }
 
@@ -642,7 +642,6 @@ function ProformaInvoices() {
             ${printContent.outerHTML}
             <script>
               window.onload = function() {
-                alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                 window.print();
               }
             </script>

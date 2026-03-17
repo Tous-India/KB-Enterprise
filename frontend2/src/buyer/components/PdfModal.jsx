@@ -3,6 +3,7 @@ import "./PdfModal.css";
 import { useAuth } from "../../context/AuthContext";
 import { useCurrency } from "../../context/CurrencyContext";
 import html2pdf from "html2pdf.js";
+import { toast } from "react-toastify";
 
 function PdfModal({ isOpen, onClose, orderData, type = "po" }) {
   const { user } = useAuth();
@@ -13,14 +14,14 @@ function PdfModal({ isOpen, onClose, orderData, type = "po" }) {
   const handlePrint = () => {
     const element = document.querySelector(".invoice-container");
     if (!element) {
-      alert("Unable to print. Please try again.");
+      toast.error("Unable to print. Please try again.");
       return;
     }
 
     // Create a new window for printing
     const printWindow = window.open("", "_blank", "width=800,height=600");
     if (!printWindow) {
-      alert("Please allow pop-ups to print the document.");
+      toast.warning("Please allow pop-ups to print the document.");
       return;
     }
 
@@ -437,7 +438,7 @@ function PdfModal({ isOpen, onClose, orderData, type = "po" }) {
     try {
       const element = document.querySelector(".invoice-container");
       if (!element) {
-        alert("Unable to generate PDF. Please try again.");
+        toast.error("Unable to generate PDF. Please try again.");
         return;
       }
 
@@ -488,7 +489,7 @@ function PdfModal({ isOpen, onClose, orderData, type = "po" }) {
         });
     } catch (error) {
       console.error("Error generating PDF:", error);
-      alert("Failed to generate PDF. Error: " + error.message);
+      toast.error("Failed to generate PDF. Error: " + error.message);
     }
   };
 

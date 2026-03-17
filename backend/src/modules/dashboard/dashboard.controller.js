@@ -3,7 +3,7 @@ import Invoice from "../invoices/invoices.model.js";
 import Payment from "../payments/payments.model.js";
 import Product from "../products/products.model.js";
 import User from "../users/users.model.js";
-import PurchaseOrder from "../purchaseOrders/purchaseOrders.model.js";
+ 
 import Quotation from "../quotations/quotations.model.js";
 import ProformaInvoice from "../proformaInvoices/proformaInvoices.model.js";
 import PaymentRecord from "../paymentRecords/paymentRecords.model.js";
@@ -16,6 +16,8 @@ import { ROLES } from "../../constants/index.js";
 // ===========================
 // Overall counts and totals
 export const getSummary = catchAsync(async (req, res) => {
+  const now = new Date();
+
   const [
     totalOrders,
     openOrders,
@@ -24,26 +26,53 @@ export const getSummary = catchAsync(async (req, res) => {
     totalProducts,
     activeProducts,
     pendingPOs,
-    pendingQuotations,
-    totalRevenue,
+    activeQuotations,
+    totalRevenueData,
     unpaidInvoices,
+    paidInvoices,
+    totalInvoices,
+    lowStockProducts,
+    inStockProducts,
+    totalUsers,
   ] = await Promise.all([
     Order.countDocuments(),
     Order.countDocuments({ status: { $in: ["OPEN", "PROCESSING"] } }),
-    Order.countDocuments({ status: "DISPATCHED" }),
+    Order.countDocuments({ status: { $in: ["DISPATCHED", "DELIVERED"] } }),
     User.countDocuments({ role: ROLES.BUYER, is_active: true }),
     Product.countDocuments(),
     Product.countDocuments({ is_active: true }),
-    PurchaseOrder.countDocuments({ status: "PENDING" }),
-    Quotation.countDocuments({ status: "PENDING" }),
-    Payment.aggregate([
-      { $match: { status: "COMPLETED" } },
-      { $group: { _id: null, total: { $sum: "$amount" } } },
+    // Active quotations: SENT status and not expired
+    Quotation.countDocuments({
+      status: "SENT",
+      $or: [
+        { expiry_date: { $exists: false } },
+        { expiry_date: null },
+        { expiry_date: { $gt: now } },
+      ],
+    }),
+    // Total revenue from paid invoices
+    Invoice.aggregate([
+      { $match: { status: "PAID" } },
+      { $group: { _id: null, total: { $sum: "$total_amount" } } },
     ]),
     Invoice.countDocuments({ status: { $in: ["UNPAID", "PARTIAL", "OVERDUE"] } }),
+    Invoice.countDocuments({ status: "PAID" }),
+    Invoice.countDocuments(),
+    // Low stock: products with quantity between 1 and 50
+    Product.countDocuments({
+      is_active: true,
+      total_quantity: { $gt: 0, $lt: 50 },
+    }),
+    // In stock products
+    Product.countDocuments({
+      is_active: true,
+      stock_status: "In Stock",
+    }),
+    // Total active users
+    User.countDocuments({ is_active: true }),
   ]);
 
-  const revenue = totalRevenue.length > 0 ? totalRevenue[0].total : 0;
+  const totalRevenue = totalRevenueData.length > 0 ? totalRevenueData[0].total : 0;
 
   return ApiResponse.success(
     res,
@@ -56,9 +85,14 @@ export const getSummary = catchAsync(async (req, res) => {
         totalProducts,
         activeProducts,
         pendingPOs,
-        pendingQuotations,
-        totalRevenue: revenue,
+        activeQuotations,
+        totalRevenue,
         unpaidInvoices,
+        paidInvoices,
+        totalInvoices,
+        lowStockProducts,
+        inStockProducts,
+        totalUsers,
       },
     },
     "Dashboard summary fetched"

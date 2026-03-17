@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import {
   Box,
   Typography,
@@ -151,6 +152,11 @@ function Users() {
   // Password visibility toggle
   const [showPassword, setShowPassword] = useState(false);
 
+  // Edit user password state
+  const [editNewPassword, setEditNewPassword] = useState("");
+  const [editConfirmPassword, setEditConfirmPassword] = useState("");
+  const [showEditPassword, setShowEditPassword] = useState(false);
+
   // Permissions state for Sub Admin
   const [selectedPermissions, setSelectedPermissions] = useState([]);
 
@@ -168,10 +174,14 @@ function Users() {
     }
   }, [isAddModalOpen]);
 
-  // Initialize email verification status when editing user
+  // Initialize email verification status and reset password fields when editing user
   useEffect(() => {
     if (isEditModalOpen && selectedUser) {
       setEditEmailVerified(selectedUser.email_verified === true);
+      // Reset password fields when modal opens
+      setEditNewPassword("");
+      setEditConfirmPassword("");
+      setShowEditPassword(false);
     }
   }, [isEditModalOpen, selectedUser]);
 
@@ -205,11 +215,11 @@ function Users() {
     if (file) {
       const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
       if (!validTypes.includes(file.type)) {
-        alert("Please upload a valid image file (JPG, PNG, GIF, or WebP)");
+        toast.error("Please upload a valid image file (JPG, PNG, GIF, or WebP)");
         return;
       }
       if (file.size > 5 * 1024 * 1024) {
-        alert("Image size should be less than 5MB");
+        toast.error("Image size should be less than 5MB");
         return;
       }
       setProfileImageFile(file);
@@ -305,6 +315,18 @@ function Users() {
   const handleUpdateUser = () => {
     if (!selectedUser) return;
 
+    // Validate password if provided
+    if (editNewPassword) {
+      if (editNewPassword.length < 6) {
+        toast.error("Password must be at least 6 characters");
+        return;
+      }
+      if (editNewPassword !== editConfirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+    }
+
     const updateData = {
       name: userForm.name,
       // email is intentionally excluded - login email cannot be changed
@@ -318,11 +340,18 @@ function Users() {
       updateData.email_verified = editEmailVerified;
     }
 
+    // Add password if admin wants to reset it (for BUYER users or admin's own account)
+    if (editNewPassword && (selectedUser?.role === 'BUYER' || selectedUser?._id === currentUser?._id)) {
+      updateData.password = editNewPassword;
+    }
+
     updateUserMutation.mutate(
       { id: selectedUser._id, data: updateData },
       {
         onSuccess: () => {
           closeEditModal();
+          setEditNewPassword("");
+          setEditConfirmPassword("");
         },
       }
     );
@@ -1699,6 +1728,101 @@ function Users() {
               </Grid>
             )}
 
+            {/* Password Reset Section - For BUYER users OR admin editing their own account */}
+            {(selectedUser?.role === 'BUYER' || selectedUser?._id === currentUser?._id) && (
+              <>
+                <Grid size={{ xs: 12 }}>
+                  <Divider sx={{ my: 1 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      Password Management
+                    </Typography>
+                  </Divider>
+                </Grid>
+
+                {/* Current Password Display (masked for security) */}
+                <Grid size={{ xs: 12 }}>
+                  <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1, mb: 1 }}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+                        Current Password:
+                      </Typography>
+                      <TextField
+                        size="small"
+                        value="••••••••••••"
+                        disabled
+                        sx={{
+                          width: 200,
+                          '& .MuiInputBase-input.Mui-disabled': {
+                            WebkitTextFillColor: '#333',
+                            letterSpacing: '2px',
+                            fontFamily: 'monospace'
+                          }
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        (Passwords are encrypted and cannot be viewed)
+                      </Typography>
+                    </Stack>
+                  </Box>
+                </Grid>
+
+                {/* New Password Fields */}
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="New Password"
+                    type={showEditPassword ? "text" : "password"}
+                    value={editNewPassword}
+                    onChange={(e) => setEditNewPassword(e.target.value)}
+                    placeholder="Leave empty to keep current password"
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowEditPassword(!showEditPassword)}
+                            edge="end"
+                            size="small"
+                          >
+                            {showEditPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                    helperText="Minimum 6 characters. Leave empty to keep current password."
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <TextField
+                    fullWidth
+                    label="Confirm New Password"
+                    type={showEditPassword ? "text" : "password"}
+                    value={editConfirmPassword}
+                    onChange={(e) => setEditConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    error={editNewPassword && editConfirmPassword && editNewPassword !== editConfirmPassword}
+                    helperText={
+                      editNewPassword && editConfirmPassword && editNewPassword !== editConfirmPassword
+                        ? "Passwords do not match"
+                        : "Must match the new password"
+                    }
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            onClick={() => setShowEditPassword(!showEditPassword)}
+                            edge="end"
+                            size="small"
+                          >
+                            {showEditPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+                </Grid>
+              </>
+            )}
+
             <Grid size={{ xs: 12 }}>
               <Divider sx={{ my: 1 }}>
                 <Typography variant="caption" color="text.secondary">
@@ -1813,7 +1937,12 @@ function Users() {
           <Button
             variant="contained"
             onClick={handleUpdateUser}
-            disabled={!userForm.name || updateUserMutation.isPending}
+            disabled={
+              !userForm.name ||
+              updateUserMutation.isPending ||
+              (editNewPassword && editNewPassword.length < 6) ||
+              (editNewPassword && editNewPassword !== editConfirmPassword)
+            }
             startIcon={updateUserMutation.isPending ? <CircularProgress size={20} /> : <Edit />}
           >
             {updateUserMutation.isPending ? "Saving..." : "Save Changes"}

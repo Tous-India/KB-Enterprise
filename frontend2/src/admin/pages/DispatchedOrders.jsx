@@ -170,8 +170,74 @@ function DispatchedOrders() {
   const [emailDispatch, setEmailDispatch] = useState(null)
   const [buyerCurrentEmail, setBuyerCurrentEmail] = useState(null)
 
+  // Inline dispatch date editing state
+  const [editDispatchDate, setEditDispatchDate] = useState('')
+  const [savingDispatchDate, setSavingDispatchDate] = useState(false)
+
+  // Inline estimated delivery date editing state
+  const [editEstDeliveryDate, setEditEstDeliveryDate] = useState('')
+  const [savingEstDeliveryDate, setSavingEstDeliveryDate] = useState(false)
+
   const handleViewDetails = (order) => {
+    // Initialize the edit dispatch date with the order's current date
+    const dispatchDate = order.order_date || order.dispatch_date || order.createdAt
+    setEditDispatchDate(dispatchDate ? new Date(dispatchDate).toISOString().split('T')[0] : '')
+    // Initialize the edit estimated delivery date
+    const estDelivery = order.estimated_delivery
+    setEditEstDeliveryDate(estDelivery ? new Date(estDelivery).toISOString().split('T')[0] : '')
     openDetailModal(order)
+  }
+
+  // Save dispatch date (inline edit)
+  const handleSaveDispatchDate = async () => {
+    if (!selectedOrder || !editDispatchDate) return
+
+    try {
+      setSavingDispatchDate(true)
+      await updateDispatchMutation.mutateAsync({
+        orderId: selectedOrder._id || selectedOrder.id,
+        dispatchData: {
+          dispatch_date: editDispatchDate,
+          courier_service: dispatchForm.courier_service,
+          tracking_number: dispatchForm.tracking_number,
+          dispatch_notes: dispatchForm.dispatch_notes,
+          shipment_status: dispatchForm.shipment_status
+        }
+      })
+      toast.success('Dispatch date updated successfully')
+      // Update the form state
+      updateDispatchForm('dispatch_date', editDispatchDate)
+    } catch (err) {
+      console.error('Error updating dispatch date:', err)
+      toast.error(err.message || 'Failed to update dispatch date')
+    } finally {
+      setSavingDispatchDate(false)
+    }
+  }
+
+  // Save estimated delivery date (inline edit)
+  const handleSaveEstDeliveryDate = async () => {
+    if (!selectedOrder || !editEstDeliveryDate) return
+
+    try {
+      setSavingEstDeliveryDate(true)
+      await updateDispatchMutation.mutateAsync({
+        orderId: selectedOrder._id || selectedOrder.id,
+        dispatchData: {
+          estimated_delivery: editEstDeliveryDate,
+          courier_service: dispatchForm.courier_service,
+          tracking_number: dispatchForm.tracking_number,
+          dispatch_notes: dispatchForm.dispatch_notes,
+          shipment_status: dispatchForm.shipment_status
+        }
+      })
+      toast.success('Estimated delivery date updated successfully')
+    } catch (err) {
+      console.error('Error updating estimated delivery date:', err)
+      toast.error(err.message || 'Failed to update estimated delivery date')
+    } finally {
+      setSavingEstDeliveryDate(false)
+    }
   }
 
   const handleViewProducts = (items) => {
@@ -246,7 +312,6 @@ function DispatchedOrders() {
             ${printContent.outerHTML}
             <script>
               window.onload = function() {
-                alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                 window.print();
               };
             <\/script>
@@ -325,7 +390,6 @@ function DispatchedOrders() {
             ${printContent.outerHTML}
             <script>
               window.onload = function() {
-                alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                 window.print();
               };
             <\/script>
@@ -490,12 +554,12 @@ Customer Service Team`
 
   const handleGenerateInvoice = () => {
     if (invoiceItems.length === 0) {
-      alert('Please add at least one item to the invoice')
+      toast.warning('Please add at least one item to the invoice')
       return
     }
 
     if (invoiceItems.every(item => item.dispatch_quantity === 0)) {
-      alert('Please set dispatch quantities greater than 0')
+      toast.warning('Please set dispatch quantities greater than 0')
       return
     }
 
@@ -511,7 +575,7 @@ Customer Service Team`
     }
 
     console.log('Invoice Generated:', invoiceData)
-    alert(`Invoice created successfully for ${invoiceData.items.length} item(s)!\nTotal: $${invoiceTotal.toFixed(2)} / ₹${(invoiceTotal * usdToInr).toFixed(2)}`)
+    toast.success(`Invoice created successfully for ${invoiceData.items.length} item(s)! Total: $${invoiceTotal.toFixed(2)} / ₹${(invoiceTotal * usdToInr).toFixed(2)}`)
 
     closeInvoiceCreationModal()
   }
@@ -950,21 +1014,53 @@ Customer Service Team`
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Stack spacing={0.5}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="body2" fontWeight="medium">
                           Dispatch Date:
                         </Typography>
-                        <Typography variant="body2">
-                          {new Date(selectedOrder.order_date).toLocaleDateString()}
-                        </Typography>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={editDispatchDate}
+                            onChange={(e) => setEditDispatchDate(e.target.value)}
+                            sx={{ width: 150, '& input': { fontSize: '13px', py: 0.5 } }}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={handleSaveDispatchDate}
+                            disabled={savingDispatchDate || !editDispatchDate}
+                            sx={{ fontSize: '11px', py: 0.5, minWidth: 'auto', px: 1.5 }}
+                          >
+                            {savingDispatchDate ? <CircularProgress size={14} color="inherit" /> : 'Update'}
+                          </Button>
+                        </Stack>
                       </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Typography variant="body2" fontWeight="medium">
                           Est. Delivery:
                         </Typography>
-                        <Typography variant="body2">
-                          {new Date(selectedOrder.estimated_delivery).toLocaleDateString()}
-                        </Typography>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <TextField
+                            type="date"
+                            size="small"
+                            value={editEstDeliveryDate}
+                            onChange={(e) => setEditEstDeliveryDate(e.target.value)}
+                            sx={{ width: 150, '& input': { fontSize: '13px', py: 0.5 } }}
+                            InputLabelProps={{ shrink: true }}
+                          />
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={handleSaveEstDeliveryDate}
+                            disabled={savingEstDeliveryDate || !editEstDeliveryDate}
+                            sx={{ fontSize: '11px', py: 0.5, minWidth: 'auto', px: 1.5 }}
+                          >
+                            {savingEstDeliveryDate ? <CircularProgress size={14} color="inherit" /> : 'Update'}
+                          </Button>
+                        </Stack>
                       </Box>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Typography variant="body2" fontWeight="medium">

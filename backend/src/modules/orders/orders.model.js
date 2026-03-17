@@ -163,6 +163,7 @@ const OrderSchema = new Schema(
     order_date: {
       type: Date,
       default: Date.now,
+      index: true,
     },
 
     status: {

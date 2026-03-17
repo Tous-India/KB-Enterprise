@@ -298,7 +298,7 @@ export const createSubAdmin = catchAsync(async (req, res) => {
 // ===========================
 // Admin only — update user details
 export const update = catchAsync(async (req, res) => {
-  const { name, email, phone, address, company_details, email_verified } = req.body;
+  const { name, email, phone, address, company_details, email_verified, password } = req.body;
 
   const user = await User.findById(req.params.id).select("-password");
 
@@ -328,6 +328,14 @@ export const update = catchAsync(async (req, res) => {
       user.is_active = true;
       user.approval_status = "APPROVED";
     }
+  }
+
+  // Allow admin to reset user password
+  if (password !== undefined && password.trim() !== "") {
+    if (password.length < 6) {
+      throw new AppError("Password must be at least 6 characters", 400);
+    }
+    user.password = password; // Will be hashed by pre-save middleware
   }
 
   await user.save();

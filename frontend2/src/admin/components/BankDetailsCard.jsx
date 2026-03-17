@@ -1,5 +1,6 @@
 import { Paper, Typography, Stack, Box, Divider, Chip } from '@mui/material';
 import { AccountBalance, ContentCopy } from '@mui/icons-material';
+import { toast } from 'react-toastify';
 
 // DetailRow component - moved outside to prevent re-creation on each render
 const DetailRow = ({ label, value, copyable = false, showCopy = true, onCopy }) => (
@@ -43,7 +44,7 @@ function BankDetailsCard({
 
   const handleCopy = (text, label) => {
     navigator.clipboard.writeText(text);
-    alert(`${label} copied to clipboard!`);
+    toast.success(`${label} copied to clipboard!`);
   };
 
   if (variant === 'compact') {

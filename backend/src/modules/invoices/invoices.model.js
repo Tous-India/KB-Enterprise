@@ -273,6 +273,7 @@ const InvoiceSchema = new Schema(
     invoice_date: {
       type: Date,
       default: Date.now,
+      index: true,
     },
     due_date: Date,
     shipping_date: Date,

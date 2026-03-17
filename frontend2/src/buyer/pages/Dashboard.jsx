@@ -3,93 +3,16 @@ import "./Dashboard.css";
 import whatsapp from "../../../public/whatsapp-color-svgrepo-com.png";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PdfModal from "../components/PdfModal";
 import ContactModal from "../components/ContactModal";
 import { useBuyerDashboardStats } from "../../hooks/useDashboard";
 import useCartStore from "../../stores/useCartStore";
 import { CircularProgress } from "@mui/material";
+import categoriesService from "../../services/categories.service";
 
-import ActuatorKit from "../../../public/category/Actuator Kits.webp";
-import AeroShell from "../../../public/category/Aero Shell.webp";
-import CamGuard from "../../../public/category/Cam Guard.webp";
-import Corrosion from "../../../public/category/Corrosion.webp";
-import Nuts from "../../../public/category/Nuts.webp";
-import ParkingBreak from "../../../public/category/Parking Break.webp";
-import Philips66 from "../../../public/category/Philips 66.webp";
-import RCAllenInstrument from "../../../public/category/RC Allen Instrument.webp";
-import Rivets from "../../../public/category/Rivets.webp";
-import ShimmyDamper from "../../../public/category/Shimmy Damper.webp";
-import Spacers from "../../../public/category/Spacers.webp";
-import StrutServiceKits from "../../../public/category/Strut Service Kits.webp";
-import SynTech from "../../../public/category/Syn-Tech.webp";
-import TyRap from "../../../public/category/Ty Rap.webp";
-import GroundSupportEquipment from "../../../public/category/Ground Support Equipment.webp";
-import HandTools from "../../../public/category/Hand Tools.webp";
-import CotterPin from "../../../public/category/Cotter Pin.webp";
-import Drills from "../../../public/category/Drills.webp";
-import EZTurn from "../../../public/category/EZ Turn.webp";
-import Fittings from "../../../public/category/Fittings.webp";
-import FuelStrainer from "../../../public/category/Fuel Strainer.webp";
-import FuelTreatment from "../../../public/category/Fuel Treatment.webp";
-import BatteryAnalyzer from "../../../public/category/Battery Analyzer.webp";
-import BattteryCCharger from "../../../public/category/Batttery CCharger.webp";
-import BreakMasterKit from "../../../public/category/Break Master Kit.webp";
-import CableTensiometer from "../../../public/category/Cable Tensiometer.webp";
-
-const categories = [
-  { name: "Safety / Survival", image: "/ss/Screenshot 2025-12-18 121622.png" },
-  { name: "Cotter Pins", image: CotterPin },
-  { name: "Fittings", image: Fittings },
-  { name: "Nuts", image: Nuts },
-  { name: "Rivets", image: Rivets },
-  { name: "Spacers", image: Spacers },
-  { name: "EZ Turn", image: EZTurn },
-  {
-    name: "Corrosion Technologies",
-    image: Corrosion,
-  },
-  { name: "Syn-Tech Ltd", image: SynTech },
-  { name: "Fuel Treatment", image: FuelTreatment },
-  { name: "Probes and Senders", image: "/ss/Screenshot 2025-12-18 121622.png" },
-  { name: "Alcor Instruments", image: "/ss/Screenshot 2025-12-18 121622.png" },
-  {
-    name: "RC Allen Instruments",
-    image: RCAllenInstrument,
-  },
-  { name: "CamGuard", image: CamGuard },
-  { name: "AeroShell", image: AeroShell },
-  { name: "Phillips 66", image: Philips66 },
-  { name: "EZ Turn lubricant", image: EZTurn },
-  { name: "Actuator Kits", image: ActuatorKit },
-  {
-    name: "Brake master cylinder kits",
-    image: BreakMasterKit,
-  },
-  {
-    name: "Fuel Strainer and selector valve kits",
-    image: FuelStrainer,
-  },
-  {
-    name: "Parking Brake Valve Kits",
-    image: ParkingBreak,
-  },
-  { name: "Shimmy Damper Kits", image: ShimmyDamper },
-  { name: "Strut Service kits", image: StrutServiceKits },
-  {
-    name: "Battery Charger, maintainer, desulfators",
-    image: BattteryCCharger,
-  },
-  { name: "Battery analyzers", image: BatteryAnalyzer },
-  { name: "Drills", image: Drills },
-  { name: "Hand tools", image: HandTools },
-  { name: "Cable Tensiometer", image: CableTensiometer },
-  {
-    name: "Ground support equipment",
-    image: GroundSupportEquipment,
-  },
-  { name: "Ty-rap", image: TyRap },
-];
+// Default placeholder image for categories without icons
+const DEFAULT_CATEGORY_IMAGE = "/ss/Screenshot 2025-12-18 121622.png";
 
 // Recent Orders Component
 const RecentOrders = ({ orders = [], onViewClick, isLoading }) => {
@@ -203,28 +126,48 @@ const RecentOrders = ({ orders = [], onViewClick, isLoading }) => {
 };
 
 // Browse by Category Component
-const BrowseByCategory = ({ categories, onCategoryClick }) => {
+const BrowseByCategory = ({ categories, onCategoryClick, isLoading }) => {
+  if (isLoading) {
+    return (
+      <div className="categories-section">
+        <h2 className="section-heading">Browse by Category</h2>
+        <div style={{ display: "flex", justifyContent: "center", padding: "40px" }}>
+          <CircularProgress size={32} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="categories-section">
       <h2 className="section-heading">Browse by Category</h2>
       <div className="categories-grid">
-        {categories.map((category, index) => (
-          <div
-            className="category-card"
-            key={index}
-            onClick={() => onCategoryClick(category.name)}
-            style={{ cursor: "pointer" }}
-          >
-            <div className="category-image-wrapper">
-              <img
-                src={category.image}
-                alt={category.name}
-                className="category-image"
-              />
+        {categories.length === 0 ? (
+          <p style={{ textAlign: "center", padding: "40px", color: "#666", gridColumn: "1 / -1" }}>
+            No categories found.
+          </p>
+        ) : (
+          categories.map((category) => (
+            <div
+              className="category-card"
+              key={category._id || category.category_id}
+              onClick={() => onCategoryClick(category.name)}
+              style={{ cursor: "pointer" }}
+            >
+              <div className="category-image-wrapper">
+                <img
+                  src={category.icon?.url || DEFAULT_CATEGORY_IMAGE}
+                  alt={category.name}
+                  className="category-image"
+                  onError={(e) => {
+                    e.target.src = DEFAULT_CATEGORY_IMAGE;
+                  }}
+                />
+              </div>
+              <h3 className="category-name">{category.name}</h3>
             </div>
-            <h3 className="category-name">{category.name}</h3>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
@@ -236,9 +179,38 @@ function Dashboard() {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   // Fetch dashboard stats from API
   const { data: dashboardData, isLoading: statsLoading } = useBuyerDashboardStats();
+
+  // Fetch categories from database
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setCategoriesLoading(true);
+      try {
+        const response = await categoriesService.getAll();
+        if (response.success) {
+          // Sort by display_order if available
+          const sortedCategories = (response.data?.categories || []).sort(
+            (a, b) => (a.display_order || 0) - (b.display_order || 0)
+          );
+          setCategories(sortedCategories);
+        } else {
+          console.error("Failed to fetch categories:", response.error);
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategories([]);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Get cart items count from cart store
   const { getItemCount } = useCartStore();
@@ -401,6 +373,7 @@ function Dashboard() {
       <BrowseByCategory
         categories={categories}
         onCategoryClick={handleCategoryClick}
+        isLoading={categoriesLoading}
       />
 
       {/* Recent Orders Section */}

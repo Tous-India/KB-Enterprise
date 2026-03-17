@@ -30,7 +30,10 @@ export const ENDPOINTS = {
     CREATE: '/purchase-orders',
     UPDATE: (id) => `/purchase-orders/${id}`,
     DELETE: (id) => `/purchase-orders/${id}`,
-    CONVERT_TO_QUOTE: (id) => `/purchase-orders/${id}/convert-to-quote`,
+    ADMIN_UPDATE: (id) => `/purchase-orders/${id}/admin-update`,
+    CANCEL: (id) => `/purchase-orders/${id}/cancel`,
+    REJECT: (id) => `/purchase-orders/${id}/reject`,
+    CONVERT_TO_QUOTATION: (id) => `/purchase-orders/${id}/convert-to-quotation`,
     GET_BY_STATUS: (status) => `/purchase-orders?status=${status}`,
   },
 
@@ -199,15 +202,6 @@ export const ENDPOINTS = {
     SUMMARY: '/pi-allocations/summary/stats',
     UPDATE_STATUS: (id) => `/pi-allocations/${id}/status`,
     RECEIVE: (id) => `/pi-allocations/${id}/receive`,
-  },
-
-  // Purchase Dashboard
-  PURCHASE_DASHBOARD: {
-    SUMMARY: '/purchase-dashboard/summary',
-    SUPPLIER_STATS: '/purchase-dashboard/supplier-stats',
-    PENDING_ALLOCATIONS: '/purchase-dashboard/pending-allocations',
-    ALLOCATION_PROGRESS: '/purchase-dashboard/allocation-progress',
-    RECENT_ACTIVITY: '/purchase-dashboard/recent-activity',
   },
 
   // Proforma Invoices

@@ -9,7 +9,6 @@ import Quotation from "../quotations/quotations.model.js";
 import Payment from "../payments/payments.model.js";
 import Product from "../products/products.model.js";
 import User from "../users/users.model.js";
-import PurchaseOrder from "../purchaseOrders/purchaseOrders.model.js";
 import Statement from "../statements/statements.model.js";
 
 // ===========================
@@ -85,16 +84,7 @@ const REPORT_QUERY_MAP = {
     sort: { createdAt: -1 },
     select: "-password",
   },
-  purchaseOrders: {
-    model: PurchaseOrder,
-    populate: [{ path: "buyer", select: "name email user_id" }],
-    filterMap: {
-      status: "status",
-      buyer: "buyer",
-    },
-    dateField: "po_date",
-    sort: { createdAt: -1 },
-  },
+ 
   statements: {
     model: Statement,
     populate: [{ path: "buyer", select: "name email user_id" }],
@@ -110,7 +100,7 @@ const REPORT_QUERY_MAP = {
 // GET /api/reports/download-pdf
 // ===========================
 // Query params:
-//   type     (required) - invoices, orders, quotations, payments, products, users, purchaseOrders, statements
+//   type     (required) - invoices, orders, quotations, payments, products, users, statements
 //   status   (optional) - filter by status
 //   buyer    (optional) - filter by buyer ID
 //   category (optional) - filter by category (products)

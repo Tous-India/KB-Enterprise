@@ -1,6 +1,5 @@
 import Cart from "./carts.model.js";
 import Product from "../products/products.model.js";
-import PurchaseOrder from "../purchaseOrders/purchaseOrders.model.js";
 import catchAsync from "../../utils/catchAsync.js";
 import ApiResponse from "../../utils/apiResponse.js";
 import AppError from "../../utils/AppError.js";
@@ -12,7 +11,7 @@ import AppError from "../../utils/AppError.js";
 export const getMyCart = catchAsync(async (req, res) => {
   let cart = await Cart.findOne({ user: req.user._id }).populate(
     "items.product",
-    "product_name part_number image stock_status product_id"
+    "product_name part_number image stock_status product_id",
   );
 
   // If no cart exists yet, return empty cart
@@ -54,7 +53,7 @@ export const addItem = catchAsync(async (req, res) => {
 
   // Check if product already in cart — update quantity
   const existingItem = cart.items.find(
-    (item) => item.product.toString() === product
+    (item) => item.product.toString() === product,
   );
 
   if (existingItem) {
@@ -73,7 +72,7 @@ export const addItem = catchAsync(async (req, res) => {
   // Return populated cart
   await cart.populate(
     "items.product",
-    "product_name part_number image stock_status product_id"
+    "product_name part_number image stock_status product_id",
   );
 
   return ApiResponse.success(res, { cart }, "Item added to cart");
@@ -109,7 +108,7 @@ export const updateItem = catchAsync(async (req, res) => {
 
   await cart.populate(
     "items.product",
-    "product_name part_number image stock_status product_id"
+    "product_name part_number image stock_status product_id",
   );
 
   return ApiResponse.success(res, { cart }, "Cart item updated");
@@ -139,7 +138,7 @@ export const removeItem = catchAsync(async (req, res) => {
 
   await cart.populate(
     "items.product",
-    "product_name part_number image stock_status product_id"
+    "product_name part_number image stock_status product_id",
   );
 
   return ApiResponse.success(res, { cart }, "Item removed from cart");
@@ -182,31 +181,13 @@ export const checkout = catchAsync(async (req, res) => {
     throw new AppError("Cart is empty", 400);
   }
 
-  // Build PO items from cart (product + quantity only, no pricing)
-  const poItems = cart.items.map((item) => ({
-    product: item.product,
-    part_number: item.part_number,
-    product_name: item.product_name,
-    quantity: item.quantity,
-  }));
-
-  // Create Purchase Order
-  const purchaseOrder = await PurchaseOrder.create({
-    title,
-    buyer: req.user._id,
-    buyer_name: req.user.name,
-    items: poItems,
-    shipping_address,
-    customer_notes,
-  });
-
   // Clear cart after successful PO creation
   cart.items = [];
   await cart.save();
 
   return ApiResponse.created(
     res,
-    { purchaseOrder },
-    "Order placed successfully. Purchase order created."
+    {},
+    "Order placed successfully. Purchase order created.",
   );
 });

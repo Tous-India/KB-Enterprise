@@ -293,6 +293,8 @@ export const update = catchAsync(async (req, res) => {
     dispatched,
     dispatch_date,
     dispatch_details,
+    // Document date
+    issue_date,
   } = req.body || {};
 
   const proforma = await ProformaInvoice.findById(id);
@@ -348,6 +350,15 @@ export const update = catchAsync(async (req, res) => {
   if (dispatched !== undefined) proforma.dispatched = dispatched;
   if (dispatch_date !== undefined) proforma.dispatch_date = dispatch_date;
   if (dispatch_details !== undefined) proforma.dispatch_details = dispatch_details;
+
+  // Update issue_date with format validation
+  if (issue_date !== undefined) {
+    const dateValue = new Date(issue_date);
+    if (isNaN(dateValue.getTime())) {
+      throw new AppError("Invalid date format", 400);
+    }
+    proforma.issue_date = dateValue;
+  }
 
   await proforma.save();
 

@@ -12,7 +12,7 @@ import dotenv from "dotenv";
 // Import all models
 import User from "../src/modules/users/users.model.js";
 import Order from "../src/modules/orders/orders.model.js";
-import PurchaseOrder from "../src/modules/purchaseOrders/purchaseOrders.model.js";
+ 
 import Quotation from "../src/modules/quotations/quotations.model.js";
 import ProformaInvoice from "../src/modules/proformaInvoices/proformaInvoices.model.js";
 import Invoice from "../src/modules/invoices/invoices.model.js";
@@ -128,12 +128,8 @@ const deleteUsers = async () => {
     summary.orders = ordersDeleted.deletedCount;
     console.log(`Deleted ${ordersDeleted.deletedCount} orders`);
 
-    // 9. Delete Purchase Orders
-    const posDeleted = await PurchaseOrder.deleteMany({
-      buyer: { $in: userIds },
-    });
-    summary.purchaseOrders = posDeleted.deletedCount;
-    console.log(`Deleted ${posDeleted.deletedCount} purchase orders`);
+ 
+    // console.log(`Deleted ${posDeleted.deletedCount} purchase orders`);
 
     // 10. Delete Statements
     const statementsDeleted = await Statement.deleteMany({
@@ -155,7 +151,7 @@ const deleteUsers = async () => {
     console.log("==========================================");
     console.log(`Users:            ${summary.users}`);
     console.log(`Carts:            ${summary.carts}`);
-    console.log(`Purchase Orders:  ${summary.purchaseOrders}`);
+
     console.log(`Quotations:       ${summary.quotations}`);
     console.log(`Orders:           ${summary.orders}`);
     console.log(`Proforma Invoices:${summary.proformaInvoices}`);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from "react-toastify";
 import {
   Container,
   Box,
@@ -133,7 +134,7 @@ function Shipments() {
 
   const copyTrackingNumber = (trackingNumber) => {
     navigator.clipboard.writeText(trackingNumber);
-    alert('Tracking number copied to clipboard!');
+    toast.success('Tracking number copied to clipboard!');
   };
 
   // Print handler for shipment details
@@ -616,7 +617,6 @@ function Shipments() {
             </div>
             <script>
               window.onload = function() {
-                alert('Use "Save as PDF" option in the Print dialog to download as PDF');
                 window.print();
               };
             <\/script>

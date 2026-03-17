@@ -279,6 +279,36 @@ const quotationsService = {
   },
 
   /**
+   * Update a quotation (admin action)
+   * @param {string} id - Quotation ID
+   * @param {Object} data - Quotation data to update
+   * @returns {Promise<{success: boolean, data: Object, error: string}>}
+   */
+  update: async (id, data) => {
+    try {
+      if (USE_MOCK_DATA) {
+        return {
+          success: true,
+          data: { _id: id, ...data },
+        };
+      }
+
+      const response = await apiClient.put(ENDPOINTS.QUOTATIONS.UPDATE(id), data);
+      return {
+        success: true,
+        data: response.data?.data?.quotation || response.data?.data || response.data,
+      };
+    } catch (error) {
+      console.error('[Quotations Service] Error updating quotation:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Failed to update quotation',
+        data: null,
+      };
+    }
+  },
+
+  /**
    * Send inquiry about a quotation (buyer action)
    * Sends email through CRM to admin
    * @param {string} id - Quotation ID

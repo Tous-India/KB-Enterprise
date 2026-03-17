@@ -50,7 +50,7 @@ import {
   Add,
   Delete,
 } from "@mui/icons-material";
-import { ordersService } from "../../services";
+import { ordersService, purchaseOrdersService } from "../../services";
 import { useCurrency } from "../../context/CurrencyContext";
 import PurchaseOrderPrintPreview from "../components/PurchaseOrderPrintPreview";
 import useNotificationStore from "../../stores/useNotificationStore";
@@ -84,6 +84,10 @@ function PurchaseOrders() {
   const [showPOPreview, setShowPOPreview] = useState(false);
   const [printPO, setPrintPO] = useState(null);
   const printRef = useRef(null);
+
+  // Editable PO date state
+  const [editPODate, setEditPODate] = useState("");
+  const [savingDate, setSavingDate] = useState(false);
 
   // Clone order state
   const [showCloneModal, setShowCloneModal] = useState(false);
@@ -216,7 +220,35 @@ function PurchaseOrders() {
   // View order items
   const handleViewItems = (po) => {
     setSelectedPO(po);
+    // Initialize the edit date with the order's current date (order_date field)
+    const orderDate = po.order_date || po.createdAt;
+    setEditPODate(orderDate ? new Date(orderDate).toISOString().split("T")[0] : "");
     setShowViewItemsModal(true);
+  };
+
+  // Save PO/Order date
+  const handleSavePODate = async () => {
+    if (!selectedPO || !editPODate) return;
+
+    try {
+      setSavingDate(true);
+      // Use ordersService since data is from Orders collection (order_date field)
+      const result = await ordersService.update(selectedPO._id, { order_date: editPODate });
+      if (result.success) {
+        toast.success("Date updated successfully");
+        // Update the local state
+        setSelectedPO({ ...selectedPO, order_date: editPODate });
+        // Refresh the list
+        fetchOrders();
+      } else {
+        toast.error(result.error || "Failed to update date");
+      }
+    } catch (err) {
+      console.error("Error updating date:", err);
+      toast.error(err.response?.data?.message || "Failed to update date");
+    } finally {
+      setSavingDate(false);
+    }
   };
 
   // Print order
@@ -441,7 +473,7 @@ function PurchaseOrders() {
             {po.po_number || po.order_id}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {formatDate(po.createdAt || po.order_date)}
+            {formatDate(po.order_date || po.createdAt)}
           </Typography>
         </TableCell>
 
@@ -789,6 +821,34 @@ function PurchaseOrders() {
                     </Box>
                   </Grid>
                 </Grid>
+              </Paper>
+
+              {/* PO Date - Editable */}
+              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                  PO Date
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                  <TextField
+                    type="date"
+                    size="small"
+                    value={editPODate}
+                    onChange={(e) => setEditPODate(e.target.value)}
+                    sx={{ width: 200 }}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handleSavePODate}
+                    disabled={savingDate || !editPODate}
+                  >
+                    {savingDate ? <CircularProgress size={20} /> : "Update Date"}
+                  </Button>
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                  Original: {selectedPO.createdAt ? new Date(selectedPO.createdAt).toLocaleDateString() : "-"}
+                </Typography>
               </Paper>
 
               {/* Items Table */}

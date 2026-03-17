@@ -269,6 +269,7 @@ export const verify = catchAsync(async (req, res) => {
   record.verified_at = new Date();
   record.verification_notes = verification_notes;
   record.recorded_amount = amountToRecord;
+  record.payment_date = finalPaymentDate;
   await record.save();
 
   // Populate for response
