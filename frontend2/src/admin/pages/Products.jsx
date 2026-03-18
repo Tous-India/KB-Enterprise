@@ -69,12 +69,13 @@ function Products() {
     getStats,
   } = useProductsStore();
 
-  // Build query params for server-side pagination
+  // Build query params for server-side pagination + search
   const queryParams = {
     page: page + 1, // Backend uses 1-indexed pages
     limit: rowsPerPage,
     ...(filterCategory && { category: filterCategory }),
     ...(filterBrand && { brand: filterBrand }),
+    ...(searchTerm && { search: searchTerm }),
   };
 
   // React Query - Fetch paginated products for table
@@ -116,16 +117,8 @@ function Products() {
   // Delete mutation
   const deleteProductMutation = useDeleteProduct();
 
-  // Apply client-side search filter on paginated results
-  const displayProducts = searchTerm
-    ? products.filter(
-        (p) =>
-          p.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.part_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.brand?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : products;
+  // Server-side search — results already filtered
+  const displayProducts = products;
 
   // Get stats from all products
   const stats = getStats(allProducts);
@@ -287,7 +280,7 @@ function Products() {
             size="small"
             placeholder="Search products..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => { setSearchTerm(e.target.value); setPage(0); }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -495,7 +488,7 @@ function Products() {
         </Table>
         <TablePagination
           component="div"
-          count={searchTerm ? displayProducts.length : pagination.total}
+          count={pagination.total}
           page={page}
           onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}

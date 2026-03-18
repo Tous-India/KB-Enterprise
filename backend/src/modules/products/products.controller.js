@@ -38,13 +38,23 @@ const findProductById = async (id) => {
 // Public — buyers see no pricing, admins see everything
 // Supports: ?page, ?limit, ?category, ?brand, ?stock_status
 export const getAll = catchAsync(async (req, res) => {
-  const { page = 1, limit = 20, category, brand, stock_status } = req.query;
+  const { page = 1, limit = 20, category, brand, stock_status, search } = req.query;
 
   const filter = {};
 
   if (category) filter.category = category;
   if (brand) filter.brand = brand;
   if (stock_status) filter.stock_status = stock_status;
+
+  if (search && search.trim()) {
+    const regex = new RegExp(search.trim(), "i");
+    filter.$or = [
+      { product_name: regex },
+      { part_number: regex },
+      { oem_part: regex },
+      { hsn_code: regex },
+    ];
+  }
 
   const skip = (Number(page) - 1) * Number(limit);
 

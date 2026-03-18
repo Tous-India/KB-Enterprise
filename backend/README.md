@@ -224,7 +224,7 @@ Server runs on `http://localhost:5000`
 - `category` - Filter by category
 - `brand` - Filter by brand
 - `stock_status` - Filter by stock (In Stock, Low Stock, Out of Stock)
-- `search` - Search by name/part number
+- `search` - Search by name, part number, OEM part, or HSN code
 - `page`, `limit` - Pagination
 
 ### Quotation Endpoints

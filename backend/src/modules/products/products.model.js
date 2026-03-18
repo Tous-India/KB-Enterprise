@@ -54,6 +54,12 @@ const ProductSchema = new Schema(
       trim: true,
     },
 
+    hsn_code: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+
     product_name: {
       type: String,
       required: true,

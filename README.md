@@ -485,7 +485,7 @@ All endpoints are under `/api/` prefix:
 |--------|-----------|---------------|
 | Auth | `/auth` | `POST /login`, `POST /register/initiate`, `POST /register/verify-otp`, `POST /register/complete`, `POST /forgot-password/*` |
 | Users | `/users` | CRUD, `GET /pending`, `POST /:id/approve`, `POST /:id/reject`, `PATCH /:id/toggle-status` |
-| Products | `/products` | CRUD with image upload, filters by category/brand/stock |
+| Products | `/products` | CRUD with image upload, server-side search, filters by category/brand/stock |
 | Categories | `/categories` | CRUD with subcategories |
 | Brands | `/brands` | CRUD with logo upload |
 | Quotations | `/quotations` | CRUD, `POST /:id/accept`, `POST /:id/reject`, `POST /:id/convert-to-pi` |
@@ -553,7 +553,7 @@ frontend2/src/__tests__/
 See [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) for complete MongoDB schema documentation including:
 
 - **users** - User accounts with roles and permissions
-- **products** - Product catalog with pricing and inventory
+- **products** - Product catalog with pricing, inventory, and HSN codes
 - **categories** - Product categories with subcategories
 - **brands** - Product brands with logos
 - **quotations** - Quotation documents with 5-status lifecycle
