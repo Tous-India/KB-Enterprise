@@ -108,7 +108,6 @@ KB CRM/
 │       │   ├── useInvoices.js      # Invoice operations
 │       │   ├── useQuotations.js    # Quotation lifecycle
 │       │   ├── useDispatchedOrders.js
-│       │   ├── usePurchaseOrders.js
 │       │   ├── useUsers.js         # User management
 │       │   ├── useDashboard.js     # Dashboard stats
 │       │   └── useDesktopNotifications.js
@@ -160,10 +159,8 @@ KB CRM/
         │   ├── dispatches/         # Shipment tracking
         │   ├── payments/           # Payment tracking
         │   ├── paymentRecords/     # Buyer payment submissions
-        │   ├── purchaseOrders/     # Purchase orders
         │   ├── suppliers/          # Supplier management
         │   ├── piAllocations/      # PI item allocations to suppliers
-        │   ├── purchaseDashboard/  # Purchase analytics
         │   ├── statements/         # Account statements
         │   ├── dashboard/          # Admin dashboard analytics
         │   ├── reports/            # Report generation
@@ -279,7 +276,7 @@ npm run dev
 | Role | Description | Permissions |
 |------|-------------|-------------|
 | **SUPER_ADMIN** | Full system access | All permissions |
-| **SUB_ADMIN** | Limited admin access | Configurable subset of: `manage_users`, `manage_orders`, `manage_products`, `view_analytics`, `manage_quotes`, `manage_payments`, `manage_invoices`, `manage_dispatch` |
+| **SUB_ADMIN** | Limited admin access | Configurable subset of: `manage_users`, `manage_orders`, `manage_products`, `view_analytics`, `manage_quotes`, `manage_payments`, `manage_invoices`, `manage_dispatch`, `manage_suppliers`, `manage_allocations` |
 | **BUYER** | Customer account | Access to own orders, invoices, statements, cart, quotations |
 
 ---
@@ -408,12 +405,11 @@ The quotation system has 5 distinct status tabs:
 | Payment Records | `/admin/payment-records` | Buyer payment submissions |
 | Statements | `/admin/statements` | Account statement generation |
 | Buyer Transactions | `/admin/buyer-transactions/:id` | Per-buyer transaction history |
-| Purchase Orders | `/admin/purchase-orders` | PO management |
 | Suppliers | `/admin/suppliers` | Supplier management |
 | PI Allocation | `/admin/pi-allocation` | Allocate PI items to suppliers |
-| Purchase Dashboard | `/admin/purchase-dashboard` | Purchase analytics & profit tracking |
 | Profit Analysis | `/admin/profit-analysis` | Profit/loss analysis |
 | Archives | `/admin/archives` | Archived documents |
+| Profile | `/admin/profile` | Admin profile management |
 
 ---
 
@@ -499,7 +495,6 @@ All endpoints are under `/api/` prefix:
 | Dispatches | `/dispatches` | CRUD, tracking updates |
 | Payments | `/payments` | CRUD, record against invoices |
 | Payment Records | `/payment-records` | Buyer payment submissions |
-| Purchase Orders | `/purchase-orders` | CRUD, status updates |
 | Suppliers | `/suppliers` | CRUD |
 | PI Allocations | `/pi-allocations` | Allocate PI items to suppliers |
 | Statements | `/statements` | Generate per-buyer statements |

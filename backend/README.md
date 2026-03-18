@@ -69,10 +69,8 @@ backend/
 │   │   ├── dispatches/               # Shipment tracking
 │   │   ├── payments/                 # Payment tracking
 │   │   ├── paymentRecords/           # Buyer payment submissions
-│   │   ├── purchaseOrders/           # Purchase orders
 │   │   ├── suppliers/                # Supplier management
 │   │   ├── piAllocations/            # PI item allocations
-│   │   ├── purchaseDashboard/        # Purchase analytics
 │   │   ├── statements/               # Account statements
 │   │   ├── dashboard/                # Admin dashboard
 │   │   ├── reports/                  # Report generation
