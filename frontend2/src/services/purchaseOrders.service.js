@@ -133,7 +133,7 @@ const purchaseOrdersService = {
       }
 
       const response = await apiClient.post(
-        ENDPOINTS.PURCHASE_ORDERS.CONVERT_TO_QUOTE(poId),
+        ENDPOINTS.PURCHASE_ORDERS.CONVERT_TO_QUOTATION(poId),
         quoteData
       );
       return {

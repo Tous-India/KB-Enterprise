@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -412,8 +412,8 @@ function Categories() {
                 </TableRow>
               ) : paginatedCategories.length > 0 ? (
                 paginatedCategories.map((category) => (
-                  <>
-                    <TableRow key={category._id || category.category_id} hover>
+                  <React.Fragment key={category._id || category.category_id}>
+                    <TableRow hover>
                       <TableCell>
                         {category.sub_categories?.length > 0 && (
                           <IconButton
@@ -555,7 +555,7 @@ function Categories() {
                         </TableCell>
                       </TableRow>
                     )}
-                  </>
+                  </React.Fragment>
                 ))
               ) : (
                 <TableRow>

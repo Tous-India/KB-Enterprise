@@ -275,6 +275,15 @@ export const ENDPOINTS = {
     REVENUE_BY_MONTH: '/dashboard/revenue-by-month',
   },
 
+  // Purchase Dashboard
+  PURCHASE_DASHBOARD: {
+    SUMMARY: '/purchase-dashboard/summary',
+    SUPPLIER_STATS: '/purchase-dashboard/supplier-stats',
+    PENDING_ALLOCATIONS: '/purchase-dashboard/pending-allocations',
+    ALLOCATION_PROGRESS: '/purchase-dashboard/allocation-progress',
+    RECENT_ACTIVITY: '/purchase-dashboard/recent-activity',
+  },
+
   // Archives (Legacy Data)
   ARCHIVES: {
     LIST: '/archives',

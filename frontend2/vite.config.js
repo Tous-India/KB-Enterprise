@@ -12,7 +12,7 @@ export default defineConfig({
     // Proxy API requests to backend in development
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://127.0.0.1:5000",
         changeOrigin: true,
         secure: false,
         // Suppress proxy errors in console when backend is unavailable
@@ -33,7 +33,7 @@ export default defineConfig({
         },
       },
       "/uploads": {
-        target: "http://localhost:5000",
+        target: "http://127.0.0.1:5000",
         changeOrigin: true,
         secure: false,
         configure: (proxy) => {

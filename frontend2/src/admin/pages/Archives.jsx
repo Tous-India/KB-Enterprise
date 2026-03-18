@@ -736,7 +736,7 @@ const Archives = () => {
       {/* Stats Cards */}
       {showStats && stats && (
         <Grid container spacing={3} className="mb-6">
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -746,7 +746,7 @@ const Archives = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -758,7 +758,7 @@ const Archives = () => {
               </CardContent>
             </Card>
           </Grid>
-          <Grid item xs={12} md={3}>
+          <Grid size={{ xs: 12, md: 3 }}>
             <Card>
               <CardContent>
                 <Typography color="textSecondary" gutterBottom>
@@ -900,7 +900,7 @@ const Archives = () => {
 
 
           {/* Date From */}
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -913,7 +913,7 @@ const Archives = () => {
           </Grid>
 
           {/* Date To */}
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -926,7 +926,7 @@ const Archives = () => {
           </Grid>
 
           {/* Min Amount */}
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -938,7 +938,7 @@ const Archives = () => {
           </Grid>
 
           {/* Max Amount */}
-          <Grid item xs={6} md={2}>
+          <Grid size={{ xs: 6, md: 2 }}>
             <TextField
               fullWidth
               size="small"
@@ -950,7 +950,7 @@ const Archives = () => {
           </Grid>
 
           {/* Apply Filters Button */}
-          <Grid item xs={12} md={2}>
+          <Grid size={{ xs: 12, md: 2 }}>
             <Button
               fullWidth
               variant="contained"
